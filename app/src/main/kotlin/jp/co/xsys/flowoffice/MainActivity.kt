@@ -22,6 +22,8 @@ import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions
 import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
 import jp.co.xsys.flowoffice.data.security.DeviceActivationStore
+import jp.co.xsys.flowoffice.presentation.admin.DeviceAdminScreen
+import jp.co.xsys.flowoffice.presentation.admin.DeviceAdminViewModel
 import jp.co.xsys.flowoffice.presentation.pairing.PairingScreen
 import jp.co.xsys.flowoffice.presentation.pairing.PairingSubmissionState
 import jp.co.xsys.flowoffice.presentation.pairing.PairingViewModel
@@ -47,6 +49,8 @@ class MainActivity : ComponentActivity() {
                     val pairingState by pairingViewModel.uiState.collectAsStateWithLifecycle()
                     val punchViewModel: PunchViewModel = viewModel()
                     val punchState by punchViewModel.uiState.collectAsStateWithLifecycle()
+                    val adminViewModel: DeviceAdminViewModel = viewModel()
+                    val adminState by adminViewModel.uiState.collectAsStateWithLifecycle()
                     val scannerOptions = remember {
                         GmsBarcodeScannerOptions.Builder()
                             .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
@@ -64,12 +68,18 @@ class MainActivity : ComponentActivity() {
                         }
                     }
 
-                    DisposableEffect(showPunch) {
+                    DisposableEffect(showPunch, adminState.visible) {
                         val nfcAdapter = NfcAdapter.getDefaultAdapter(this@MainActivity)
                         if (showPunch) {
                             nfcAdapter?.enableReaderMode(
                                 this@MainActivity,
-                                { tag -> punchViewModel.onNfcTagDiscovered(tag.id) },
+                                { tag ->
+                                    if (adminState.visible) {
+                                        adminViewModel.onNfcTagDiscovered(tag.id)
+                                    } else {
+                                        punchViewModel.onNfcTagDiscovered(tag.id)
+                                    }
+                                },
                                 NFC_READER_FLAGS,
                                 null,
                             )
@@ -80,8 +90,8 @@ class MainActivity : ComponentActivity() {
                         }
                     }
 
-                    DisposableEffect(showPunch) {
-                        if (showPunch) {
+                    DisposableEffect(showPunch, adminState.visible) {
+                        if (showPunch && !adminState.visible) {
                             window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
                         } else {
                             window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
@@ -89,10 +99,24 @@ class MainActivity : ComponentActivity() {
                         onDispose { }
                     }
 
-                    if (showPunch) {
+                    if (showPunch && adminState.visible) {
+                        DeviceAdminScreen(
+                            state = adminState,
+                            onClose = adminViewModel::close,
+                            onBeginAdminCardScan = adminViewModel::beginAdminCardScan,
+                            onBeginBootstrap = adminViewModel::beginBootstrap,
+                            onSelectBootstrapAdmin = adminViewModel::selectBootstrapAdmin,
+                            onSearchQueryChange = adminViewModel::onSearchQueryChange,
+                            onSearch = adminViewModel::searchUsers,
+                            onSelectUser = adminViewModel::selectUser,
+                            onBeginCardRegistration = adminViewModel::beginCardRegistration,
+                            onBackToUsers = adminViewModel::backToUsers,
+                        )
+                    } else if (showPunch) {
                         PunchScreen(
                             state = punchState,
                             onSelectType = punchViewModel::selectType,
+                            onOpenDeviceAdmin = adminViewModel::open,
                         )
                     } else {
                         PairingScreen(

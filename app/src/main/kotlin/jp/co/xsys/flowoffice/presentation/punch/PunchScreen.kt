@@ -38,6 +38,7 @@ private const val PUNCH_CONTENT_MAX_WIDTH_DP = 720
 fun PunchScreen(
     state: PunchUiState,
     onSelectType: (PunchType) -> Unit,
+    onOpenDeviceAdmin: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
@@ -74,6 +75,13 @@ fun PunchScreen(
                     onSelectType = onSelectType,
                 )
                 PunchOperationStatus(operation = state.operation)
+                HorizontalDivider()
+                OutlinedButton(
+                    onClick = onOpenDeviceAdmin,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(stringResource(R.string.admin_open))
+                }
             }
         }
     }
@@ -231,6 +239,7 @@ private fun PunchScreenPhonePreview() {
                 appInstanceId = "12345678-1234-1234-1234-123456789012",
             ),
             onSelectType = {},
+            onOpenDeviceAdmin = {},
         )
     }
 }
