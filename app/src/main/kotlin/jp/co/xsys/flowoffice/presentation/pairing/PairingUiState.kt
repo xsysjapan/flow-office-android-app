@@ -36,5 +36,6 @@ data class PairingUiState(
 sealed interface PairingSubmissionState {
     data object Idle : PairingSubmissionState
     data object Submitting : PairingSubmissionState
+    data object Success : PairingSubmissionState
     data class Error(val message: String) : PairingSubmissionState
 }

@@ -123,6 +123,9 @@ fun PairingScreen(
                 if (state.submission is PairingSubmissionState.Error) {
                     PairingError(message = state.submission.message)
                 }
+                if (state.submission is PairingSubmissionState.Success) {
+                    PairingSuccess()
+                }
 
                 Button(
                     onClick = onPair,
@@ -177,6 +180,29 @@ private fun PairingError(message: String) {
             text = message,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.error,
+        )
+    }
+}
+
+@Composable
+private fun PairingSuccess() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .semantics {
+                liveRegion = LiveRegionMode.Assertive
+            },
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Text(
+            text = stringResource(R.string.pairing_success_heading),
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.primary,
+        )
+        Text(
+            text = stringResource(R.string.pairing_success_message),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }

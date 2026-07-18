@@ -76,7 +76,27 @@ class PairingScreenTest {
             }
         }
 
-        composeRule.onNodeWithText("ペアリングできませんでした").assertExists()
+        composeRule.onNodeWithText("アクティベーションできませんでした").assertExists()
         composeRule.onNodeWithText("管理者にコードの再発行を依頼してください。").assertExists()
+    }
+
+    @Test
+    fun successStateShowsActivationMessage() {
+        composeRule.setContent {
+            FlowOfficeReaderTheme {
+                PairingScreen(
+                    state = PairingUiState(
+                        submission = PairingSubmissionState.Success,
+                    ),
+                    onApiBaseUrlChange = {},
+                    onDeviceIdChange = {},
+                    onPairingCodeChange = {},
+                    onPair = {},
+                    allowApiUrlEditing = true,
+                )
+            }
+        }
+
+        composeRule.onNodeWithText("アクティベーション済み").assertExists()
     }
 }
