@@ -19,64 +19,41 @@ class PairingScreenTest {
 
     @Test
     fun submitIsDisabledUntilAllInputsAreValid() {
-        composeRule.setContent {
-            FlowOfficeReaderTheme {
-                PairingScreen(
-                    state = PairingUiState(),
-                    onApiBaseUrlChange = {},
-                    onDeviceIdChange = {},
-                    onPairingCodeChange = {},
-                    onPair = {},
-                    allowApiUrlEditing = true,
-                )
-            }
-        }
-
+        setPairingContent(state = PairingUiState())
         composeRule.onNodeWithTag("pairing-submit").assertIsNotEnabled()
     }
 
     @Test
     fun validInputsEnableSubmitAndDispatchClick() {
         var clicks = 0
-        composeRule.setContent {
-            FlowOfficeReaderTheme {
-                PairingScreen(
-                    state = PairingUiState(
-                        apiBaseUrl = "https://office.example.jp/api/",
-                        deviceId = "123",
-                        pairingCode = "A1B2C3D4",
-                    ),
-                    onApiBaseUrlChange = {},
-                    onDeviceIdChange = {},
-                    onPairingCodeChange = {},
-                    onPair = { clicks += 1 },
-                    allowApiUrlEditing = true,
-                )
-            }
-        }
+        setPairingContent(
+            state = PairingUiState(
+                apiBaseUrl = "https://office.example.jp/api/",
+                claimToken = "temporary-token",
+            ),
+            onPair = { clicks += 1 },
+        )
 
         composeRule.onNodeWithTag("pairing-submit").assertIsEnabled().performClick()
         assertEquals(1, clicks)
     }
 
     @Test
+    fun scanQrIsPrimaryAction() {
+        var scans = 0
+        setPairingContent(state = PairingUiState(), onScanQr = { scans += 1 })
+
+        composeRule.onNodeWithTag("pairing-scan").assertIsEnabled().performClick()
+        assertEquals(1, scans)
+    }
+
+    @Test
     fun errorStateShowsSafeRecoveryMessage() {
-        composeRule.setContent {
-            FlowOfficeReaderTheme {
-                PairingScreen(
-                    state = PairingUiState(
-                        submission = PairingSubmissionState.Error(
-                            R.string.error_pairing_unauthorized,
-                        ),
-                    ),
-                    onApiBaseUrlChange = {},
-                    onDeviceIdChange = {},
-                    onPairingCodeChange = {},
-                    onPair = {},
-                    allowApiUrlEditing = true,
-                )
-            }
-        }
+        setPairingContent(
+            state = PairingUiState(
+                submission = PairingSubmissionState.Error(R.string.error_pairing_unauthorized),
+            ),
+        )
 
         composeRule.onNodeWithText(stringResource(R.string.pairing_error_heading)).assertExists()
         composeRule.onNodeWithText(stringResource(R.string.error_pairing_unauthorized)).assertExists()
@@ -84,22 +61,29 @@ class PairingScreenTest {
 
     @Test
     fun successStateShowsActivationMessage() {
+        setPairingContent(
+            state = PairingUiState(submission = PairingSubmissionState.Success),
+        )
+        composeRule.onNodeWithText(stringResource(R.string.pairing_success_heading)).assertExists()
+    }
+
+    private fun setPairingContent(
+        state: PairingUiState,
+        onScanQr: () -> Unit = {},
+        onPair: () -> Unit = {},
+    ) {
         composeRule.setContent {
             FlowOfficeReaderTheme {
                 PairingScreen(
-                    state = PairingUiState(
-                        submission = PairingSubmissionState.Success,
-                    ),
+                    state = state,
                     onApiBaseUrlChange = {},
-                    onDeviceIdChange = {},
-                    onPairingCodeChange = {},
-                    onPair = {},
+                    onClaimTokenChange = {},
+                    onScanQr = onScanQr,
+                    onPair = onPair,
                     allowApiUrlEditing = true,
                 )
             }
         }
-
-        composeRule.onNodeWithText(stringResource(R.string.pairing_success_heading)).assertExists()
     }
 
     private fun stringResource(resourceId: Int): String =

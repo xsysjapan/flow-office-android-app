@@ -2,6 +2,7 @@ package jp.co.xsys.flowoffice
 
 import android.nfc.NfcAdapter
 import android.os.Bundle
+import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -17,6 +18,9 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.Modifier
+import com.google.mlkit.vision.barcode.common.Barcode
+import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions
+import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
 import jp.co.xsys.flowoffice.data.security.DeviceActivationStore
 import jp.co.xsys.flowoffice.presentation.pairing.PairingScreen
 import jp.co.xsys.flowoffice.presentation.pairing.PairingSubmissionState
@@ -43,6 +47,15 @@ class MainActivity : ComponentActivity() {
                     val pairingState by pairingViewModel.uiState.collectAsStateWithLifecycle()
                     val punchViewModel: PunchViewModel = viewModel()
                     val punchState by punchViewModel.uiState.collectAsStateWithLifecycle()
+                    val scannerOptions = remember {
+                        GmsBarcodeScannerOptions.Builder()
+                            .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
+                            .enableAutoZoom()
+                            .build()
+                    }
+                    val qrScanner = remember {
+                        GmsBarcodeScanning.getClient(this@MainActivity, scannerOptions)
+                    }
 
                     LaunchedEffect(pairingState.submission) {
                         if (pairingState.submission is PairingSubmissionState.Success) {
@@ -67,6 +80,15 @@ class MainActivity : ComponentActivity() {
                         }
                     }
 
+                    DisposableEffect(showPunch) {
+                        if (showPunch) {
+                            window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+                        } else {
+                            window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+                        }
+                        onDispose { }
+                    }
+
                     if (showPunch) {
                         PunchScreen(
                             state = punchState,
@@ -76,8 +98,16 @@ class MainActivity : ComponentActivity() {
                         PairingScreen(
                             state = pairingState,
                             onApiBaseUrlChange = pairingViewModel::onApiBaseUrlChange,
-                            onDeviceIdChange = pairingViewModel::onDeviceIdChange,
-                            onPairingCodeChange = pairingViewModel::onPairingCodeChange,
+                            onClaimTokenChange = pairingViewModel::onClaimTokenChange,
+                            onScanQr = {
+                                qrScanner.startScan()
+                                    .addOnSuccessListener { barcode ->
+                                        pairingViewModel.onQrCodeScanned(barcode.rawValue)
+                                    }
+                                    .addOnFailureListener {
+                                        pairingViewModel.onQrScannerFailed()
+                                    }
+                            },
                             onPair = pairingViewModel::activate,
                             allowApiUrlEditing = true,
                         )

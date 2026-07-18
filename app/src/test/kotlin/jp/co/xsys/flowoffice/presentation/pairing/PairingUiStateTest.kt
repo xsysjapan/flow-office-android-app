@@ -9,8 +9,7 @@ class PairingUiStateTest {
     fun `valid inputs enable pairing`() {
         val state = PairingUiState(
             apiBaseUrl = "https://office.example.jp/api/",
-            deviceId = "123",
-            pairingCode = "A1B2C3D4",
+            claimToken = "temporary-token",
         )
 
         assertTrue(state.canSubmit)
@@ -20,8 +19,7 @@ class PairingUiStateTest {
     fun `submitting state disables pairing`() {
         val state = PairingUiState(
             apiBaseUrl = "https://office.example.jp/api/",
-            deviceId = "123",
-            pairingCode = "A1B2C3D4",
+            claimToken = "temporary-token",
             submission = PairingSubmissionState.Submitting,
         )
 
@@ -29,11 +27,9 @@ class PairingUiStateTest {
     }
 
     @Test
-    fun `non numeric device id disables pairing`() {
+    fun `missing claim token disables pairing`() {
         val state = PairingUiState(
             apiBaseUrl = "https://office.example.jp/api/",
-            deviceId = "device-123",
-            pairingCode = "A1B2C3D4",
         )
 
         assertFalse(state.canSubmit)

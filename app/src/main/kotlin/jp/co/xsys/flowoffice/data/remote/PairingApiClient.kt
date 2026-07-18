@@ -9,30 +9,21 @@ import org.json.JSONException
 import org.json.JSONObject
 
 class PairingApiClient {
-    fun exchangePairingCode(
-        apiBaseUrl: String,
-        deviceId: Long,
-        pairingCode: String,
-    ): PairingExchangeResponse {
-        val endpoint = URL(buildPairingExchangeUrl(apiBaseUrl))
+    fun claimPairing(
+        claimUrl: String,
+        claimToken: String,
+    ): PairingClaimResponse {
+        val endpoint = URL(claimUrl)
         val connection = endpoint.openConnection() as HttpURLConnection
 
         try {
-            val requestJson = JSONObject()
-                .put("device_id", deviceId)
-                .put("pairing_code", pairingCode)
-                .toString()
-
             connection.requestMethod = "POST"
             connection.connectTimeout = CONNECT_TIMEOUT_MILLIS
             connection.readTimeout = READ_TIMEOUT_MILLIS
             connection.doOutput = true
             connection.setRequestProperty("Accept", "application/json")
-            connection.setRequestProperty("Content-Type", "application/json; charset=utf-8")
-
-            connection.outputStream.use { output ->
-                output.write(requestJson.toByteArray(Charsets.UTF_8))
-            }
+            connection.setRequestProperty("Authorization", "Bearer $claimToken")
+            connection.outputStream.use { }
 
             val statusCode = connection.responseCode
             val responseBody = readResponseBody(connection, statusCode)
@@ -70,15 +61,6 @@ class PairingApiClient {
         }
     }
 
-    private fun buildPairingExchangeUrl(apiBaseUrl: String): String {
-        val baseUrl = apiBaseUrl.trim().trimEnd('/')
-        return if (baseUrl.endsWith("/api")) {
-            "$baseUrl/devices/pairing/exchange"
-        } else {
-            "$baseUrl/api/devices/pairing/exchange"
-        }
-    }
-
     private fun readResponseBody(connection: HttpURLConnection, statusCode: Int): String {
         val stream = if (statusCode in 200..299) {
             connection.inputStream
@@ -89,7 +71,7 @@ class PairingApiClient {
         return stream.bufferedReader(Charsets.UTF_8).use { it.readText() }
     }
 
-    private fun parseSuccess(responseBody: String): PairingExchangeResponse {
+    private fun parseSuccess(responseBody: String): PairingClaimResponse {
         val json = JSONObject(responseBody)
         val token = json.optString("token")
         if (token.isBlank()) {
@@ -99,9 +81,17 @@ class PairingApiClient {
             )
         }
 
-        return PairingExchangeResponse(
+        val device = json.optJSONObject("device")
+        val deviceId = device?.optLong("id")?.takeIf { it > 0 }
+            ?: throw PairingApiException(
+                statusCode = null,
+                error = AppError.PairingResponseInvalid,
+            )
+
+        return PairingClaimResponse(
             token = token,
-            deviceJson = json.optJSONObject("device")?.toString(),
+            deviceId = deviceId,
+            deviceJson = device.toString(),
         )
     }
 
@@ -124,9 +114,10 @@ class PairingApiClient {
     }
 }
 
-data class PairingExchangeResponse(
+data class PairingClaimResponse(
     val token: String,
-    val deviceJson: String?,
+    val deviceId: Long,
+    val deviceJson: String,
 )
 
 class PairingApiException(

@@ -7,6 +7,8 @@ import jp.co.xsys.flowoffice.R
 import jp.co.xsys.flowoffice.data.remote.PairingApiClient
 import jp.co.xsys.flowoffice.data.remote.PairingApiException
 import jp.co.xsys.flowoffice.data.repository.PairingRepository
+import jp.co.xsys.flowoffice.data.repository.PairingClaimPayload
+import jp.co.xsys.flowoffice.data.repository.PairingClaimPayloadParser
 import jp.co.xsys.flowoffice.data.security.DeviceActivationStore
 import jp.co.xsys.flowoffice.domain.error.AppError
 import kotlinx.coroutines.Dispatchers
@@ -32,54 +34,71 @@ class PairingViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    fun onDeviceIdChange(value: String) {
-        _uiState.update {
-            it.copy(deviceId = value.filter(Char::isDigit), submission = PairingSubmissionState.Idle)
-        }
-    }
-
-    fun onPairingCodeChange(value: String) {
+    fun onClaimTokenChange(value: String) {
         _uiState.update {
             it.copy(
-                pairingCode = value.uppercase().take(PairingUiState.PAIRING_CODE_LENGTH),
+                claimToken = value,
                 submission = PairingSubmissionState.Idle,
             )
         }
     }
 
+    fun onQrCodeScanned(rawValue: String?) {
+        val payload = rawValue?.let(PairingClaimPayloadParser::fromQrJson)
+        if (payload == null) {
+            _uiState.update {
+                it.copy(submission = PairingSubmissionState.Error(R.string.error_pairing_qr_invalid))
+            }
+            return
+        }
+
+        _uiState.update {
+            it.copy(
+                apiBaseUrl = payload.apiBaseUrl,
+                claimToken = payload.claimToken,
+                submission = PairingSubmissionState.Idle,
+            )
+        }
+        activate(payload)
+    }
+
+    fun onQrScannerFailed() {
+        _uiState.update {
+            it.copy(submission = PairingSubmissionState.Error(R.string.error_pairing_scanner_unavailable))
+        }
+    }
+
     fun activate() {
         val state = _uiState.value
-        if (!state.canSubmit) {
+        val payload = PairingClaimPayloadParser.fromManualInput(
+            apiBaseUrl = state.apiBaseUrl,
+            claimToken = state.claimToken,
+        )
+        if (!state.canSubmit || payload == null) {
             _uiState.update {
                 it.copy(submission = PairingSubmissionState.Error(R.string.error_pairing_input_required))
             }
             return
         }
+        activate(payload)
+    }
 
-        val deviceId = state.deviceId.toLongOrNull()
-        if (deviceId == null) {
-            _uiState.update {
-                it.copy(submission = PairingSubmissionState.Error(R.string.error_pairing_device_id_invalid))
-            }
-            return
-        }
-
+    private fun activate(payload: PairingClaimPayload) {
         _uiState.update { it.copy(submission = PairingSubmissionState.Submitting) }
 
         viewModelScope.launch {
             val result = runCatching {
                 withContext(Dispatchers.IO) {
-                    repository.activateDevice(
-                        apiBaseUrl = state.apiBaseUrl,
-                        deviceId = deviceId,
-                        pairingCode = state.pairingCode,
-                    )
+                    repository.activateDevice(payload)
                 }
             }
 
             _uiState.update {
                 if (result.isSuccess) {
-                    it.copy(submission = PairingSubmissionState.Success)
+                    it.copy(
+                        claimToken = "",
+                        submission = PairingSubmissionState.Success,
+                    )
                 } else {
                     it.copy(submission = PairingSubmissionState.Error(result.exceptionOrNull().toStringResId()))
                 }
@@ -94,7 +113,8 @@ class PairingViewModel(application: Application) : AndroidViewModel(application)
 
     private fun AppError.toStringResId(): Int = when (this) {
         AppError.PairingInputRequired -> R.string.error_pairing_input_required
-        AppError.PairingDeviceIdInvalid -> R.string.error_pairing_device_id_invalid
+        AppError.PairingQrInvalid -> R.string.error_pairing_qr_invalid
+        AppError.PairingScannerUnavailable -> R.string.error_pairing_scanner_unavailable
         AppError.PairingTimeout -> R.string.error_pairing_timeout
         AppError.PairingConnectionFailed -> R.string.error_pairing_connection_failed
         AppError.PairingResponseInvalid -> R.string.error_pairing_response_invalid

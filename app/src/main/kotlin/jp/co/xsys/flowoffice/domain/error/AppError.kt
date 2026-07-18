@@ -2,7 +2,8 @@ package jp.co.xsys.flowoffice.domain.error
 
 enum class AppError {
     PairingInputRequired,
-    PairingDeviceIdInvalid,
+    PairingQrInvalid,
+    PairingScannerUnavailable,
     PairingTimeout,
     PairingConnectionFailed,
     PairingResponseInvalid,

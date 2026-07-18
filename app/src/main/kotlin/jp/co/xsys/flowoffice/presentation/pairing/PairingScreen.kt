@@ -20,6 +20,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,8 +32,8 @@ import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import jp.co.xsys.flowoffice.R
@@ -44,8 +45,8 @@ private const val PAIRING_FORM_MAX_WIDTH_DP = 560
 fun PairingScreen(
     state: PairingUiState,
     onApiBaseUrlChange: (String) -> Unit,
-    onDeviceIdChange: (String) -> Unit,
-    onPairingCodeChange: (String) -> Unit,
+    onClaimTokenChange: (String) -> Unit,
+    onScanQr: () -> Unit,
     onPair: () -> Unit,
     allowApiUrlEditing: Boolean,
     modifier: Modifier = Modifier,
@@ -82,9 +83,31 @@ fun PairingScreen(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
 
+                Button(
+                    onClick = onScanQr,
+                    enabled = !isSubmitting,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp)
+                        .testTag("pairing-scan"),
+                ) {
+                    Text(stringResource(R.string.pairing_scan_qr))
+                }
+
                 Spacer(modifier = Modifier.height(8.dp))
                 HorizontalDivider()
                 Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = stringResource(R.string.pairing_manual_heading),
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.semantics { heading() },
+                )
+                Text(
+                    text = stringResource(R.string.pairing_manual_description),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
 
                 OutlinedTextField(
                     value = state.apiBaseUrl,
@@ -96,27 +119,14 @@ fun PairingScreen(
                     modifier = Modifier.fillMaxWidth(),
                 )
                 OutlinedTextField(
-                    value = state.deviceId,
-                    onValueChange = { value ->
-                        onDeviceIdChange(value.filter(Char::isDigit))
-                    },
-                    label = { Text(stringResource(R.string.device_id)) },
+                    value = state.claimToken,
+                    onValueChange = onClaimTokenChange,
+                    label = { Text(stringResource(R.string.pairing_claim_token)) },
+                    supportingText = { Text(stringResource(R.string.pairing_claim_token_support)) },
                     enabled = !isSubmitting,
                     singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                OutlinedTextField(
-                    value = state.pairingCode,
-                    onValueChange = onPairingCodeChange,
-                    label = { Text(stringResource(R.string.pairing_code)) },
-                    supportingText = { Text(stringResource(R.string.pairing_code_support)) },
-                    enabled = !isSubmitting,
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(
-                        capitalization = KeyboardCapitalization.Characters,
-                        keyboardType = KeyboardType.Ascii,
-                    ),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    visualTransformation = PasswordVisualTransformation(),
                     modifier = Modifier.fillMaxWidth(),
                 )
 
@@ -127,7 +137,7 @@ fun PairingScreen(
                     PairingSuccess()
                 }
 
-                Button(
+                OutlinedButton(
                     onClick = onPair,
                     enabled = state.canSubmit,
                     modifier = Modifier
@@ -147,7 +157,7 @@ fun PairingScreen(
                             Text(stringResource(R.string.pairing_in_progress))
                         }
                     } else {
-                        Text(stringResource(R.string.pairing_action))
+                        Text(stringResource(R.string.pairing_manual_action))
                     }
                 }
 
@@ -222,8 +232,6 @@ private fun PairingScreenTabletDarkPreview() {
         PairingScreenPreviewContent(
             state = PairingUiState(
                 apiBaseUrl = "https://office.example.jp/api/",
-                deviceId = "123",
-                pairingCode = "A1B2C3D4",
                 submission = PairingSubmissionState.Error(
                     R.string.error_pairing_unauthorized,
                 ),
@@ -239,8 +247,8 @@ private fun PairingScreenPreviewContent(
     PairingScreen(
         state = state,
         onApiBaseUrlChange = {},
-        onDeviceIdChange = {},
-        onPairingCodeChange = {},
+        onClaimTokenChange = {},
+        onScanQr = {},
         onPair = {},
         allowApiUrlEditing = true,
     )

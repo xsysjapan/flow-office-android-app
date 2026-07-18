@@ -9,20 +9,17 @@ class PairingRepository(
     private val activationStore: DeviceActivationStore,
 ) {
     fun activateDevice(
-        apiBaseUrl: String,
-        deviceId: Long,
-        pairingCode: String,
+        payload: PairingClaimPayload,
     ) {
-        val response = apiClient.exchangePairingCode(
-            apiBaseUrl = apiBaseUrl,
-            deviceId = deviceId,
-            pairingCode = pairingCode,
+        val response = apiClient.claimPairing(
+            claimUrl = payload.claimUrl,
+            claimToken = payload.claimToken,
         )
 
         activationStore.saveActivation(
             DeviceActivation(
-                apiBaseUrl = apiBaseUrl.trim().trimEnd('/'),
-                deviceId = deviceId,
+                apiBaseUrl = payload.apiBaseUrl,
+                deviceId = response.deviceId,
                 token = response.token,
                 deviceJson = response.deviceJson,
             ),
