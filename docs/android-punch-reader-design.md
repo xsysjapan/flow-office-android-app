@@ -1,204 +1,171 @@
-# Android打刻リーダー 基本・詳細設計
-
-| 項目 | 内容 |
+# Android謇灘綾繝ｪ繝ｼ繝繝ｼ 蝓ｺ譛ｬ繝ｻ隧ｳ邏ｰ險ｭ險・
+| 鬆・岼 | 蜀・ｮｹ |
 |---|---|
-| 対象 | `flow-office-android-app` 初期版（共有端末モード） |
-| 参照システム | `flow-office`（Laravel API / Sanctum / EventStore） |
-| 作成日 | 2026-07-19 |
-| ステータス | Android実装前設計。API契約は`flow-office`ブランチ`claude/time-clock-recorder-app-design-2lwxqb`（2026-07-19確認）を基準とする |
+| 蟇ｾ雎｡ | `flow-office-android-app` 蛻晄悄迚茨ｼ亥・譛臥ｫｯ譛ｫ繝｢繝ｼ繝会ｼ・|
+| 蜿ら・繧ｷ繧ｹ繝・Β | `flow-office`・・aravel API / Sanctum / EventStore・・|
+| 菴懈・譌･ | 2026-07-19 |
+| 繧ｹ繝・・繧ｿ繧ｹ | Android螳溯｣・ｸｭ・・hase 1蝓ｺ逶､繝ｻ繝壹い繝ｪ繝ｳ繧ｰUI逹謇具ｼ峨・PI螂醍ｴ・・`flow-office`繝悶Λ繝ｳ繝～claude/time-clock-recorder-app-design-2lwxqb`・・026-07-19遒ｺ隱搾ｼ峨ｒ蝓ｺ貅悶→縺吶ｋ |
 
-## 1. 目的
+## 1. 逶ｮ逧・
+譛ｬ繧｢繝励Μ縺ｯ縲∝女莉倡ｭ峨↓險ｭ鄂ｮ縺励◆Android遶ｯ譛ｫ縺ｧNFC繧ｫ繝ｼ繝峨ｒ隱ｭ縺ｿ蜿悶ｊ縲∵里蟄伜共諤邂｡逅・す繧ｹ繝・Β
+`flow-office`縺ｸ蜃ｺ蜍､繝ｻ騾蜍､繝ｻ莨第・髢句ｧ九・莨第・邨ゆｺ・・謇灘綾繧､繝吶Φ繝医ｒ騾√ｋ謇灘綾繝ｪ繝ｼ繝繝ｼ縺ｧ縺ゅｋ縲・
+蛻晄悄迚医・蜈ｱ譛臥ｫｯ譛ｫ繧貞ｮ梧・蟇ｾ雎｡縺ｨ縺吶ｋ縲らｫｯ譛ｫ縺ｮBearer繝医・繧ｯ繝ｳ縺ｯ縲後←縺ｮ遶ｯ譛ｫ縺九阪ｒ隱崎ｨｼ縺励¨FC遲峨・
+隱崎ｨｼ繧ｭ繝ｼ縺ｯ縲瑚ｪｰ縺梧遠蛻ｻ縺励◆縺九阪ｒ隗｣豎ｺ縺吶ｋ縲・ndroid蛛ｴ縺ｧ縺ｯ蜍､蜍呎凾髢薙ｄ谿区･ｭ譎る俣繧定ｨ育ｮ励○縺壹∵遠蛻ｻ縺ｮ
+謗｡蜿悶・豌ｸ邯壼喧繝ｻ驟埼√→邨先棡陦ｨ遉ｺ縺縺代ｒ諡・≧縲・
+## 2. 蜿ら・雉・侭縺ｨ迴ｾ陦瑚ｪｿ譟ｻ邨先棡
 
-本アプリは、受付等に設置したAndroid端末でNFCカードを読み取り、既存勤怠管理システム
-`flow-office`へ出勤・退勤・休憩開始・休憩終了の打刻イベントを送る打刻リーダーである。
+### 2.1 蜿ら・雉・侭
 
-初期版は共有端末を完成対象とする。端末のBearerトークンは「どの端末か」を認証し、NFC等の
-認証キーは「誰が打刻したか」を解決する。Android側では勤務時間や残業時間を計算せず、打刻の
-採取・永続化・配送と結果表示だけを担う。
+- Android謇灘綾繝ｪ繝ｼ繝繝ｼ螳溯｣・欠遉ｺ譖ｸ・医Θ繝ｼ繧ｶ繝ｼ謠蝉ｾ幢ｼ・- `flow-office` 縺ｮ [繧｢繝ｼ繧ｭ繝・け繝√Ε譁ｹ驥拆(../../flow-office/docs/03-architecture.md)
+- `flow-office` 縺ｮ [蜍､諤邂｡逅・Θ繝ｼ繧ｹ繧ｱ繝ｼ繧ｹ](../../flow-office/docs/07-usecases-attendance.md)
+- `flow-office` 縺ｮ [DB繧ｹ繧ｭ繝ｼ繝枉(../../flow-office/docs/16-database-schema.md)
+- `flow-office` 縺ｮ [遶ｯ譛ｫ邂｡逅・Θ繝ｼ繧ｹ繧ｱ繝ｼ繧ｹ](../../flow-office/docs/23-usecases-devices.md)
+- `flow-office` 縺ｮ [隱崎ｨｼ繧ｭ繝ｼ邂｡逅・Θ繝ｼ繧ｹ繧ｱ繝ｼ繧ｹ](../../flow-office/docs/24-usecases-authentication-keys.md)
+- 迴ｾ陦・[API繝ｫ繝ｼ繝・(../../flow-office/backend/routes/api.php)
+- 迴ｾ陦・[AttendancePunchController](../../flow-office/backend/app/Http/Controllers/Api/AttendancePunchController.php)
+- 迴ｾ陦・[RecordAttendancePunchHandler](../../flow-office/backend/app/Domain/Attendance/Handlers/RecordAttendancePunchHandler.php)
 
-## 2. 参照資料と現行調査結果
-
-### 2.1 参照資料
-
-- Android打刻リーダー実装指示書（ユーザー提供）
-- `flow-office` の [アーキテクチャ方針](../../flow-office/docs/03-architecture.md)
-- `flow-office` の [勤怠管理ユースケース](../../flow-office/docs/07-usecases-attendance.md)
-- `flow-office` の [DBスキーマ](../../flow-office/docs/16-database-schema.md)
-- `flow-office` の [端末管理ユースケース](../../flow-office/docs/23-usecases-devices.md)
-- `flow-office` の [認証キー管理ユースケース](../../flow-office/docs/24-usecases-authentication-keys.md)
-- 現行 [APIルート](../../flow-office/backend/routes/api.php)
-- 現行 [AttendancePunchController](../../flow-office/backend/app/Http/Controllers/Api/AttendancePunchController.php)
-- 現行 [RecordAttendancePunchHandler](../../flow-office/backend/app/Domain/Attendance/Handlers/RecordAttendancePunchHandler.php)
-
-### 2.2 現行実装で確認できた事項
-
-| 項目 | 現行仕様 |
+### 2.2 迴ｾ陦悟ｮ溯｣・〒遒ｺ隱阪〒縺阪◆莠矩・
+| 鬆・岼 | 迴ｾ陦御ｻ墓ｧ・|
 |---|---|
-| API基底 | `/api` |
-| 認証 | Laravel Sanctum Bearerトークン |
-| 通常ユーザー打刻ログ | `POST /api/attendance-punches` |
-| 打刻種別 | `clock_in`, `break_start`, `break_end`, `clock_out` |
-| 時刻 | オフセット必須ISO 8601。DBには壁時計時刻と`utc_offset_minutes`を分離保存 |
-| 打刻ログの位置付け | 参考ログ。勤怠の正は`attendance_days` / `attendance_breaks` |
-| 整合時の反映 | 同一勤務日の打刻群が整合した場合のみ日次勤怠へ同期 |
-| 書き込み原則 | Command → Handler → EventStore。状態変更はイベントを記録 |
-| 共有端末登録 | `POST /api/devices`（管理者） |
-| ペアリング発行／交換 | `POST /api/devices/{id}/pairing` / `POST /api/devices/pairing/exchange` |
-| 端末打刻 | `POST /api/device-punches`、ability `recorder:punch` |
-| 本人特定 | `POST /api/devices/identity/resolve` |
-| ハートビート | `POST /api/devices/heartbeat` |
-| 端末ID | DB自動採番の整数 |
+| API蝓ｺ蠎・| `/api` |
+| 隱崎ｨｼ | Laravel Sanctum Bearer繝医・繧ｯ繝ｳ |
+| 騾壼ｸｸ繝ｦ繝ｼ繧ｶ繝ｼ謇灘綾繝ｭ繧ｰ | `POST /api/attendance-punches` |
+| 謇灘綾遞ｮ蛻･ | `clock_in`, `break_start`, `break_end`, `clock_out` |
+| 譎ょ綾 | 繧ｪ繝輔そ繝・ヨ蠢・・SO 8601縲・B縺ｫ縺ｯ螢∵凾險域凾蛻ｻ縺ｨ`utc_offset_minutes`繧貞・髮｢菫晏ｭ・|
+| 謇灘綾繝ｭ繧ｰ縺ｮ菴咲ｽｮ莉倥￠ | 蜿り・Ο繧ｰ縲ょ共諤縺ｮ豁｣縺ｯ`attendance_days` / `attendance_breaks` |
+| 謨ｴ蜷域凾縺ｮ蜿肴丐 | 蜷御ｸ蜍､蜍呎律縺ｮ謇灘綾鄒､縺梧紛蜷医＠縺溷ｴ蜷医・縺ｿ譌･谺｡蜍､諤縺ｸ蜷梧悄 |
+| 譖ｸ縺崎ｾｼ縺ｿ蜴溷援 | Command 竊・Handler 竊・EventStore縲ら憾諷句､画峩縺ｯ繧､繝吶Φ繝医ｒ險倬鹸 |
+| 蜈ｱ譛臥ｫｯ譛ｫ逋ｻ骭ｲ | `POST /api/devices`・育ｮ｡逅・・ｼ・|
+| 繝壹い繝ｪ繝ｳ繧ｰ逋ｺ陦鯉ｼ丈ｺ､謠・| `POST /api/devices/{id}/pairing` / `POST /api/devices/pairing/exchange` |
+| 遶ｯ譛ｫ謇灘綾 | `POST /api/device-punches`縲∥bility `recorder:punch` |
+| 譛ｬ莠ｺ迚ｹ螳・| `POST /api/devices/identity/resolve` |
+| 繝上・繝医ン繝ｼ繝・| `POST /api/devices/heartbeat` |
+| 遶ｯ譛ｫID | DB閾ｪ蜍墓治逡ｪ縺ｮ謨ｴ謨ｰ |
 
-### 2.3 Android連携APIの実装状況と差分
-
-参照ブランチでは、`devices`、`device_roles`、`device_scopes`、`authentication_keys`、
-`authentication_key_device_rules`と端末打刻用カラムが実装済みである。端末APIは人間向けの
-`AttendancePunchController`と分離され、最終的に共通の`RecordAttendancePunch` Commandを呼ぶ。
-
-Androidは「指示書の想定JSON」ではなく、次の現行差分へ合わせる。
-
-| 項目 | 指示書の想定 | 現行バックエンド |
+### 2.3 Android騾｣謳ｺAPI縺ｮ螳溯｣・憾豕√→蟾ｮ蛻・
+蜿ら・繝悶Λ繝ｳ繝√〒縺ｯ縲～devices`縲～device_roles`縲～device_scopes`縲～authentication_keys`縲・`authentication_key_device_rules`縺ｨ遶ｯ譛ｫ謇灘綾逕ｨ繧ｫ繝ｩ繝縺悟ｮ溯｣・ｸ医∩縺ｧ縺ゅｋ縲らｫｯ譛ｫAPI縺ｯ莠ｺ髢灘髄縺代・
+`AttendancePunchController`縺ｨ蛻・屬縺輔ｌ縲∵怙邨ら噪縺ｫ蜈ｱ騾壹・`RecordAttendancePunch` Command繧貞他縺ｶ縲・
+Android縺ｯ縲梧欠遉ｺ譖ｸ縺ｮ諠ｳ螳哽SON縲阪〒縺ｯ縺ｪ縺上∵ｬ｡縺ｮ迴ｾ陦悟ｷｮ蛻・∈蜷医ｏ縺帙ｋ縲・
+| 鬆・岼 | 謖・､ｺ譖ｸ縺ｮ諠ｳ螳・| 迴ｾ陦後ヰ繝・け繧ｨ繝ｳ繝・|
 |---|---|---|
-| ペアリング成功トークン | `access_token` | `token` |
-| 端末所有区分 | `shared` | `organization_shared` |
-| 端末ID | 例では数値 | 数値で確定 |
-| 打刻成功 | 社員表示名を想定 | `AttendancePunchResource`。`user_id`のみで氏名なし |
-| heartbeat本文 | OS、件数、端末時刻等 | `app_version`だけを受付 |
-| エラー分岐 | `error_code`を推奨 | 現状は主に422の`message` |
-| 冪等性 | 端末単位を想定 | `idempotency_key`単独の全体UNIQUE |
+| 繝壹い繝ｪ繝ｳ繧ｰ謌仙粥繝医・繧ｯ繝ｳ | `access_token` | `token` |
+| 遶ｯ譛ｫ謇譛牙玄蛻・| `shared` | `organization_shared` |
+| 遶ｯ譛ｫID | 萓九〒縺ｯ謨ｰ蛟､ | 謨ｰ蛟､縺ｧ遒ｺ螳・|
+| 謇灘綾謌仙粥 | 遉ｾ蜩｡陦ｨ遉ｺ蜷阪ｒ諠ｳ螳・| `AttendancePunchResource`縲Ａuser_id`縺ｮ縺ｿ縺ｧ豌丞錐縺ｪ縺・|
+| heartbeat譛ｬ譁・| OS縲∽ｻｶ謨ｰ縲∫ｫｯ譛ｫ譎ょ綾遲・| `app_version`縺縺代ｒ蜿嶺ｻ・|
+| 繧ｨ繝ｩ繝ｼ蛻・ｲ・| `error_code`繧呈耳螂ｨ | 迴ｾ迥ｶ縺ｯ荳ｻ縺ｫ422縺ｮ`message` |
+| 蜀ｪ遲画ｧ | 遶ｯ譛ｫ蜊倅ｽ阪ｒ諠ｳ螳・| `idempotency_key`蜊倡峡縺ｮ蜈ｨ菴填NIQUE |
 
-最後の3点はAndroid実装を止めない。DTOを現行に合わせ、氏名はnullable、heartbeatは
-`app_version`だけを送り、エラーはHTTP statusを第一判定、既知messageを補助判定とする。
-安定した`error_code`等への改善候補は19章へ分離する。
+譛蠕後・3轤ｹ縺ｯAndroid螳溯｣・ｒ豁｢繧√↑縺・・TO繧堤樟陦後↓蜷医ｏ縺帙∵ｰ丞錐縺ｯnullable縲”eartbeat縺ｯ
+`app_version`縺縺代ｒ騾√ｊ縲√お繝ｩ繝ｼ縺ｯHTTP status繧堤ｬｬ荳蛻､螳壹∵里遏･message繧定｣懷勧蛻､螳壹→縺吶ｋ縲・螳牙ｮ壹＠縺歔error_code`遲峨∈縺ｮ謾ｹ蝟・呵｣懊・19遶縺ｸ蛻・屬縺吶ｋ縲・
+## 3. 繧ｹ繧ｳ繝ｼ繝・
+### 3.1 蛻晄悄迚医↓蜷ｫ繧√ｋ
 
-## 3. スコープ
-
-### 3.1 初期版に含める
-
-- 共有端末の手入力ペアリング
-- 端末トークンの暗号化保存
-- NFC UID読取・正規化・連続読取抑止
-- 4種類の打刻
-- API送信前のRoom保存
-- オフライン保存とWorkManager再送
-- 同一イベントの冪等送信
-- オンライン／未送信件数／結果表示
-- 401時の再ペアリング誘導
-- ハートビート
-- 設定・診断・安全なペアリング解除
-- 単体、DB、通信、Worker、Compose UIテスト
-
-### 3.2 初期版に含めない
-
-- QRコード、バーコード、BLE、生体認証の実読取
-- 打刻種別の自動推定
-- Android側での勤務・残業・深夜時間計算
-- 個人端末用ユーザートークンの恒久保存
-- 厳密なリアルタイム端末監視
-- MDM配布・キオスク化（将来の運用課題）
-
-## 4. システム構成
+- 蜈ｱ譛臥ｫｯ譛ｫ縺ｮ謇句・蜉帙・繧｢繝ｪ繝ｳ繧ｰ
+- 遶ｯ譛ｫ繝医・繧ｯ繝ｳ縺ｮ證怜捷蛹紋ｿ晏ｭ・- NFC UID隱ｭ蜿悶・豁｣隕丞喧繝ｻ騾｣邯夊ｪｭ蜿匁椛豁｢
+- 4遞ｮ鬘槭・謇灘綾
+- API騾∽ｿ｡蜑阪・Room菫晏ｭ・- 繧ｪ繝輔Λ繧､繝ｳ菫晏ｭ倥→WorkManager蜀埼・- 蜷御ｸ繧､繝吶Φ繝医・蜀ｪ遲蛾∽ｿ｡
+- 繧ｪ繝ｳ繝ｩ繧､繝ｳ・乗悴騾∽ｿ｡莉ｶ謨ｰ・冗ｵ先棡陦ｨ遉ｺ
+- 401譎ゅ・蜀阪・繧｢繝ｪ繝ｳ繧ｰ隱伜ｰ・- 繝上・繝医ン繝ｼ繝・- 險ｭ螳壹・險ｺ譁ｭ繝ｻ螳牙・縺ｪ繝壹い繝ｪ繝ｳ繧ｰ隗｣髯､
+- 蜊倅ｽ薙．B縲・壻ｿ｡縲仝orker縲，ompose UI繝・せ繝・
+### 3.2 蛻晄悄迚医↓蜷ｫ繧√↑縺・
+- QR繧ｳ繝ｼ繝峨√ヰ繝ｼ繧ｳ繝ｼ繝峨。LE縲∫函菴楢ｪ崎ｨｼ縺ｮ螳溯ｪｭ蜿・- 謇灘綾遞ｮ蛻･縺ｮ閾ｪ蜍墓耳螳・- Android蛛ｴ縺ｧ縺ｮ蜍､蜍吶・谿区･ｭ繝ｻ豺ｱ螟懈凾髢楢ｨ育ｮ・- 蛟倶ｺｺ遶ｯ譛ｫ逕ｨ繝ｦ繝ｼ繧ｶ繝ｼ繝医・繧ｯ繝ｳ縺ｮ諱剃ｹ・ｿ晏ｭ・- 蜴ｳ蟇・↑繝ｪ繧｢繝ｫ繧ｿ繧､繝遶ｯ譛ｫ逶｣隕・- MDM驟榊ｸ・・繧ｭ繧ｪ繧ｹ繧ｯ蛹厄ｼ亥ｰ・擂縺ｮ驕狗畑隱ｲ鬘鯉ｼ・
+## 4. 繧ｷ繧ｹ繝・Β讒区・
 
 ```mermaid
 flowchart LR
-    Card["NFCカード"] --> Reader["Android打刻リーダー"]
-    Reader --> Room["Room: 打刻配送キュー"]
-    Reader --> Secure["Keystore保護ストレージ"]
+    Card["NFC繧ｫ繝ｼ繝・] --> Reader["Android謇灘綾繝ｪ繝ｼ繝繝ｼ"]
+    Reader --> Room["Room: 謇灘綾驟埼√く繝･繝ｼ"]
+    Reader --> Secure["Keystore菫晁ｭｷ繧ｹ繝医Ξ繝ｼ繧ｸ"]
     Room --> Worker["WorkManager"]
-    Reader -->|"即時送信"| API["flow-office Device API"]
-    Worker -->|"再送"| API
-    API --> Key["社員認証キー解決"]
+    Reader -->|"蜊ｳ譎る∽ｿ｡"| API["flow-office Device API"]
+    Worker -->|"蜀埼・| API
+    API --> Key["遉ｾ蜩｡隱崎ｨｼ繧ｭ繝ｼ隗｣豎ｺ"]
     API --> Punch["attendance_punches"]
-    Punch --> Reconcile["既存の打刻整合・日次同期"]
+    Punch --> Reconcile["譌｢蟄倥・謇灘綾謨ｴ蜷医・譌･谺｡蜷梧悄"]
     Reconcile --> Daily["attendance_days / attendance_breaks"]
     API --> Events["stored_events"]
 ```
 
-### 4.1 責務境界
+### 4.1 雋ｬ蜍吝｢・阜
 
 | Android | flow-office |
 |---|---|
-| NFC等から認証キーを採取 | 認証キーから社員を特定 |
-| 操作時刻とUTCオフセットを採取 | 入力検証・認可・監査 |
-| 打刻イベントを送信前に永続化 | 冪等性を保証して打刻ログを記録 |
-| 通信失敗時に同じキーで再送 | 打刻群から日次勤怠を組み立てる |
-| サーバー結果を表示 | 勤務時間等を計算 |
+| NFC遲峨°繧芽ｪ崎ｨｼ繧ｭ繝ｼ繧呈治蜿・| 隱崎ｨｼ繧ｭ繝ｼ縺九ｉ遉ｾ蜩｡繧堤音螳・|
+| 謫堺ｽ懈凾蛻ｻ縺ｨUTC繧ｪ繝輔そ繝・ヨ繧呈治蜿・| 蜈･蜉帶､懆ｨｼ繝ｻ隱榊庄繝ｻ逶｣譟ｻ |
+| 謇灘綾繧､繝吶Φ繝医ｒ騾∽ｿ｡蜑阪↓豌ｸ邯壼喧 | 蜀ｪ遲画ｧ繧剃ｿ晁ｨｼ縺励※謇灘綾繝ｭ繧ｰ繧定ｨ倬鹸 |
+| 騾壻ｿ｡螟ｱ謨玲凾縺ｫ蜷後§繧ｭ繝ｼ縺ｧ蜀埼・| 謇灘綾鄒､縺九ｉ譌･谺｡蜍､諤繧堤ｵ・∩遶九※繧・|
+| 繧ｵ繝ｼ繝舌・邨先棡繧定｡ｨ遉ｺ | 蜍､蜍呎凾髢鍋ｭ峨ｒ險育ｮ・|
 
-## 5. Androidアーキテクチャ
+## 5. Android繧｢繝ｼ繧ｭ繝・け繝√Ε
 
-### 5.1 採用技術
-
-- Kotlin、Jetpack Compose、Material 3
-- ViewModel、Lifecycle、Navigation Compose
+### 5.1 謗｡逕ｨ謚陦・
+- Kotlin縲゛etpack Compose縲｀aterial 3
+- ViewModel縲´ifecycle縲¨avigation Compose
 - Coroutines / Flow
 - Hilt
-- Retrofit、OkHttp、kotlinx.serialization
+- Retrofit縲＾kHttp縲〔otlinx.serialization
 - Room
 - WorkManager
-- Android Keystoreを利用した暗号化ストレージ
+- Android Keystore繧貞茜逕ｨ縺励◆證怜捷蛹悶せ繝医Ξ繝ｼ繧ｸ
 - Android NFC API
 
-基本方針は、Keystore内の非エクスポート鍵でトークンをAES-GCM暗号化し、暗号文・IV・非機密設定を
-DataStoreへ保存する方式とする。暗号化ストレージは`DeviceTokenStore` interfaceの内側へ閉じ込め、
-採用ライブラリを変更してもapplication/domain層へ影響させない。
-
-### 5.2 モジュール方針
-
-初期版は単一`app` Gradleモジュールとし、パッケージで責務を分離する。規模が増えた時点で
-`core:network`、`core:database`等へ分割できる依存方向を守る。
-
+蝓ｺ譛ｬ譁ｹ驥昴・縲゜eystore蜀・・髱槭お繧ｯ繧ｹ繝昴・繝磯嵯縺ｧ繝医・繧ｯ繝ｳ繧但ES-GCM證怜捷蛹悶＠縲∵囓蜿ｷ譁・・IV繝ｻ髱樊ｩ溷ｯ・ｨｭ螳壹ｒ
+DataStore縺ｸ菫晏ｭ倥☆繧区婿蠑上→縺吶ｋ縲よ囓蜿ｷ蛹悶せ繝医Ξ繝ｼ繧ｸ縺ｯ`DeviceTokenStore` interface縺ｮ蜀・・縺ｸ髢峨§霎ｼ繧√・謗｡逕ｨ繝ｩ繧､繝悶Λ繝ｪ繧貞､画峩縺励※繧Ｂpplication/domain螻､縺ｸ蠖ｱ髻ｿ縺輔○縺ｪ縺・・
+### 5.2 繝｢繧ｸ繝･繝ｼ繝ｫ譁ｹ驥・
+蛻晄悄迚医・蜊倅ｸ`app` Gradle繝｢繧ｸ繝･繝ｼ繝ｫ縺ｨ縺励√ヱ繝・こ繝ｼ繧ｸ縺ｧ雋ｬ蜍吶ｒ蛻・屬縺吶ｋ縲りｦ乗ｨ｡縺悟｢励∴縺滓凾轤ｹ縺ｧ
+`core:network`縲～core:database`遲峨∈蛻・牡縺ｧ縺阪ｋ萓晏ｭ俶婿蜷代ｒ螳医ｋ縲・
 ```text
-com.xsys.flowoffice.reader
-├── app
-│   ├── FlowOfficeReaderApplication
-│   ├── MainActivity
-│   └── navigation
-├── presentation
-│   ├── pairing
-│   ├── punch
-│   ├── settings
-│   └── diagnostics
-├── application
-│   ├── pairing
-│   ├── punch
-│   ├── sync
-│   └── heartbeat
-├── domain
-│   ├── device
-│   ├── identity
-│   ├── punch
-│   └── error
-├── data
-│   ├── remote
-│   ├── local
-│   ├── repository
-│   └── security
-└── infrastructure
-    ├── nfc
-    ├── network
-    ├── worker
-    └── logging
+jp.co.xsys.flowoffice
+笏懌楳笏 app
+笏・  笏懌楳笏 FlowOfficeReaderApplication
+笏・  笏懌楳笏 MainActivity
+笏・  笏披楳笏 navigation
+笏懌楳笏 presentation
+笏・  笏懌楳笏 pairing
+笏・  笏懌楳笏 punch
+笏・  笏懌楳笏 settings
+笏・  笏披楳笏 diagnostics
+笏懌楳笏 application
+笏・  笏懌楳笏 pairing
+笏・  笏懌楳笏 punch
+笏・  笏懌楳笏 sync
+笏・  笏披楳笏 heartbeat
+笏懌楳笏 domain
+笏・  笏懌楳笏 device
+笏・  笏懌楳笏 identity
+笏・  笏懌楳笏 punch
+笏・  笏披楳笏 error
+笏懌楳笏 data
+笏・  笏懌楳笏 remote
+笏・  笏懌楳笏 local
+笏・  笏懌楳笏 repository
+笏・  笏披楳笏 security
+笏披楳笏 infrastructure
+    笏懌楳笏 nfc
+    笏懌楳笏 network
+    笏懌楳笏 worker
+    笏披楳笏 logging
 ```
 
-依存方向は`presentation → application → domain`とし、`data`と`infrastructure`はdomainで定義した
-interfaceを実装する。ViewModelからRetrofitやDAOを直接呼ばない。
-
-### 5.3 主なコンポーネント
-
-| コンポーネント | 責務 |
+萓晏ｭ俶婿蜷代・`presentation 竊・application 竊・domain`縺ｨ縺励～data`縺ｨ`infrastructure`縺ｯdomain縺ｧ螳夂ｾｩ縺励◆
+interface繧貞ｮ溯｣・☆繧九７iewModel縺九ｉRetrofit繧ДAO繧堤峩謗･蜻ｼ縺ｰ縺ｪ縺・・
+### 5.3 荳ｻ縺ｪ繧ｳ繝ｳ繝昴・繝阪Φ繝・
+| 繧ｳ繝ｳ繝昴・繝阪Φ繝・| 雋ｬ蜍・|
 |---|---|
-| `PairingViewModel` | 入力検証、交換UseCase実行、画面遷移 |
-| `PunchViewModel` | 打刻種別、NFC待受、通信・未送信・結果のUI状態 |
-| `DiagnosticsViewModel` | 非秘密の端末状態・失敗キュー表示 |
-| `ExchangePairingCodeUseCase` | コード交換、トークンと端末設定の一括保存 |
-| `CreatePunchUseCase` | イベント生成、Room保存、即時送信 |
-| `RetryPendingPunchesUseCase` | 古い打刻から1件ずつ配送、状態分類 |
-| `SendHeartbeatUseCase` | 稼働情報送信 |
-| `NfcAuthenticationKeyReader` | Tag ID読取とdomain型への変換 |
-| `DeviceTokenStore` | トークンの暗号化・復号・削除 |
-| `PunchSyncWorker` | ネットワーク制約付き再送 |
+| `PairingViewModel` | 蜈･蜉帶､懆ｨｼ縲∽ｺ､謠婉seCase螳溯｡後∫判髱｢驕ｷ遘ｻ |
+| `PunchViewModel` | 謇灘綾遞ｮ蛻･縲¨FC蠕・女縲・壻ｿ｡繝ｻ譛ｪ騾∽ｿ｡繝ｻ邨先棡縺ｮUI迥ｶ諷・|
+| `DiagnosticsViewModel` | 髱樒ｧ伜ｯ・・遶ｯ譛ｫ迥ｶ諷九・螟ｱ謨励く繝･繝ｼ陦ｨ遉ｺ |
+| `ExchangePairingCodeUseCase` | 繧ｳ繝ｼ繝我ｺ､謠帙√ヨ繝ｼ繧ｯ繝ｳ縺ｨ遶ｯ譛ｫ險ｭ螳壹・荳諡ｬ菫晏ｭ・|
+| `CreatePunchUseCase` | 繧､繝吶Φ繝育函謌舌ヽoom菫晏ｭ倥∝叉譎る∽ｿ｡ |
+| `RetryPendingPunchesUseCase` | 蜿､縺・遠蛻ｻ縺九ｉ1莉ｶ縺壹▽驟埼√∫憾諷句・鬘・|
+| `SendHeartbeatUseCase` | 遞ｼ蜒肴ュ蝣ｱ騾∽ｿ｡ |
+| `NfcAuthenticationKeyReader` | Tag ID隱ｭ蜿悶→domain蝙九∈縺ｮ螟画鋤 |
+| `DeviceTokenStore` | 繝医・繧ｯ繝ｳ縺ｮ證怜捷蛹悶・蠕ｩ蜿ｷ繝ｻ蜑企勁 |
+| `PunchSyncWorker` | 繝阪ャ繝医Ρ繝ｼ繧ｯ蛻ｶ邏・ｻ倥″蜀埼・|
 
-## 6. ドメインモデル
+## 6. 繝峨Γ繧､繝ｳ繝｢繝・Ν
 
 ```kotlin
 @JvmInline
@@ -232,176 +199,117 @@ data class PunchEvent(
 )
 ```
 
-`flow-office`の`devices.id`は自動採番整数として実装済みなので、Androidも`Long`で保持する。
-
-## 7. 状態設計
-
-### 7.1 アプリ／ペアリング状態
-
+`flow-office`縺ｮ`devices.id`縺ｯ閾ｪ蜍墓治逡ｪ謨ｴ謨ｰ縺ｨ縺励※螳溯｣・ｸ医∩縺ｪ縺ｮ縺ｧ縲、ndroid繧ＡLong`縺ｧ菫晄戟縺吶ｋ縲・
+## 7. 迥ｶ諷玖ｨｭ險・
+### 7.1 繧｢繝励Μ・上・繧｢繝ｪ繝ｳ繧ｰ迥ｶ諷・
 ```mermaid
 stateDiagram-v2
-    [*] --> Unpaired: 設定なし
-    Unpaired --> Pairing: 交換開始
-    Pairing --> Paired: 交換成功・安全保存完了
-    Pairing --> Unpaired: 入力/APIエラー
-    Paired --> AuthInvalid: 端末APIが401
-    AuthInvalid --> Pairing: 再ペアリング操作
-    Paired --> Unpaired: 未送信0件で解除
+    [*] --> Unpaired: 險ｭ螳壹↑縺・    Unpaired --> Pairing: 莠､謠幃幕蟋・    Pairing --> Paired: 莠､謠帶・蜉溘・螳牙・菫晏ｭ伜ｮ御ｺ・    Pairing --> Unpaired: 蜈･蜉・API繧ｨ繝ｩ繝ｼ
+    Paired --> AuthInvalid: 遶ｯ譛ｫAPI縺・01
+    AuthInvalid --> Pairing: 蜀阪・繧｢繝ｪ繝ｳ繧ｰ謫堺ｽ・    Paired --> Unpaired: 譛ｪ騾∽ｿ｡0莉ｶ縺ｧ隗｣髯､
 ```
 
-401だけでトークンを削除しない。`AuthInvalid`では自動再送を停止し、未送信データを維持したまま
-管理者確認と再ペアリングを案内する。
-
-### 7.2 打刻配送状態
-
-| 状態 | 意味 | 次の状態 |
+401縺縺代〒繝医・繧ｯ繝ｳ繧貞炎髯､縺励↑縺・ＡAuthInvalid`縺ｧ縺ｯ閾ｪ蜍募・騾√ｒ蛛懈ｭ｢縺励∵悴騾∽ｿ｡繝・・繧ｿ繧堤ｶｭ謖√＠縺溘∪縺ｾ
+邂｡逅・・｢ｺ隱阪→蜀阪・繧｢繝ｪ繝ｳ繧ｰ繧呈｡亥・縺吶ｋ縲・
+### 7.2 謇灘綾驟埼∫憾諷・
+| 迥ｶ諷・| 諢丞袖 | 谺｡縺ｮ迥ｶ諷・|
 |---|---|---|
-| `pending` | 送信待ち | `sending` |
-| `sending` | 排他取得後の送信中 | `sent`, `failed_retryable`, `failed_permanent`, `pending_auth` |
-| `failed_retryable` | 通信例外、429、5xx | `sending` |
-| `pending_auth` | 401で認証復旧待ち | 再ペアリング後に`pending` |
-| `failed_permanent` | 422等、同じ内容では成功しない | 手動確認のみ |
-| `sent` | サーバー受理済み | 終端 |
+| `pending` | 騾∽ｿ｡蠕・■ | `sending` |
+| `sending` | 謗剃ｻ門叙蠕怜ｾ後・騾∽ｿ｡荳ｭ | `sent`, `failed_retryable`, `failed_permanent`, `pending_auth` |
+| `failed_retryable` | 騾壻ｿ｡萓句､悶・29縲・xx | `sending` |
+| `pending_auth` | 401縺ｧ隱崎ｨｼ蠕ｩ譌ｧ蠕・■ | 蜀阪・繧｢繝ｪ繝ｳ繧ｰ蠕後↓`pending` |
+| `failed_permanent` | 422遲峨∝酔縺伜・螳ｹ縺ｧ縺ｯ謌仙粥縺励↑縺・| 謇句虚遒ｺ隱阪・縺ｿ |
+| `sent` | 繧ｵ繝ｼ繝舌・蜿礼炊貂医∩ | 邨らｫｯ |
 
-プロセス強制終了で`sending`が残る場合に備え、開始から一定時間（例: 10分）経過した行を
-`failed_retryable`へ戻すリカバリをWorker起動時に行う。
-
-## 8. NFC設計
-
-### 8.1 読取
-
-- 端末がNFC対応か、設定で有効かを診断画面へ表示する。
-- Compose画面表示中はReader Modeを有効化し、画面離脱時に解除する。
-- UIDのバイト列を大文字16進、区切り・空白・`0x`なしへ正規化する。
-- 空のUID、対応外Tag、読取例外は打刻イベントを作らない。
-- NFC UIDは高保証の本人認証ではなく識別キーとして扱う。
-
+繝励Ο繧ｻ繧ｹ蠑ｷ蛻ｶ邨ゆｺ・〒`sending`縺梧ｮ九ｋ蝣ｴ蜷医↓蛯吶∴縲・幕蟋九°繧我ｸ螳壽凾髢難ｼ井ｾ・ 10蛻・ｼ臥ｵ碁℃縺励◆陦後ｒ
+`failed_retryable`縺ｸ謌ｻ縺吶Μ繧ｫ繝舌Μ繧淡orker襍ｷ蜍墓凾縺ｫ陦後≧縲・
+## 8. NFC險ｭ險・
+### 8.1 隱ｭ蜿・
+- 遶ｯ譛ｫ縺君FC蟇ｾ蠢懊°縲∬ｨｭ螳壹〒譛牙柑縺九ｒ險ｺ譁ｭ逕ｻ髱｢縺ｸ陦ｨ遉ｺ縺吶ｋ縲・- Compose逕ｻ髱｢陦ｨ遉ｺ荳ｭ縺ｯReader Mode繧呈怏蜉ｹ蛹悶＠縲∫判髱｢髮｢閼ｱ譎ゅ↓隗｣髯､縺吶ｋ縲・- UID縺ｮ繝舌う繝亥・繧貞､ｧ譁・ｭ・6騾ｲ縲∝玄蛻・ｊ繝ｻ遨ｺ逋ｽ繝ｻ`0x`縺ｪ縺励∈豁｣隕丞喧縺吶ｋ縲・- 遨ｺ縺ｮUID縲∝ｯｾ蠢懷､傍ag縲∬ｪｭ蜿紋ｾ句､悶・謇灘綾繧､繝吶Φ繝医ｒ菴懊ｉ縺ｪ縺・・- NFC UID縺ｯ鬮倅ｿ晁ｨｼ縺ｮ譛ｬ莠ｺ隱崎ｨｼ縺ｧ縺ｯ縺ｪ縺剰ｭ伜挨繧ｭ繝ｼ縺ｨ縺励※謇ｱ縺・・
 ```kotlin
 fun ByteArray.toNormalizedNfcUid(): String =
     joinToString(separator = "") { byte -> "%02X".format(byte.toInt() and 0xFF) }
 ```
 
-### 8.2 連続読取抑止
+### 8.2 騾｣邯夊ｪｭ蜿匁椛豁｢
 
-- 同じ正規化済みキーの再読取を3秒間無視する。
-- 判定値はメモリ上だけに置き、UID自体をログへ出さない。
-- 3秒抑止はUX対策であり、サーバー冪等性の代替にしない。
-- 1回の有効読取につき、1つの`idempotency_key`だけを生成する。
-
-## 9. ローカルデータ設計
-
+- 蜷後§豁｣隕丞喧貂医∩繧ｭ繝ｼ縺ｮ蜀崎ｪｭ蜿悶ｒ3遘帝俣辟｡隕悶☆繧九・- 蛻､螳壼､縺ｯ繝｡繝｢繝ｪ荳翫□縺代↓鄂ｮ縺阪ゞID閾ｪ菴薙ｒ繝ｭ繧ｰ縺ｸ蜃ｺ縺輔↑縺・・- 3遘呈椛豁｢縺ｯUX蟇ｾ遲悶〒縺ゅｊ縲√し繝ｼ繝舌・蜀ｪ遲画ｧ縺ｮ莉｣譖ｿ縺ｫ縺励↑縺・・- 1蝗槭・譛牙柑隱ｭ蜿悶↓縺､縺阪・縺､縺ｮ`idempotency_key`縺縺代ｒ逕滓・縺吶ｋ縲・
+## 9. 繝ｭ繝ｼ繧ｫ繝ｫ繝・・繧ｿ險ｭ險・
 ### 9.1 `pending_punches`
 
-| カラム | 型 | 制約／用途 |
+| 繧ｫ繝ｩ繝 | 蝙・| 蛻ｶ邏・ｼ冗畑騾・|
 |---|---|---|
-| `local_id` | TEXT | PK、UUID v7推奨 |
-| `idempotency_key` | TEXT | UNIQUE、再送中に不変 |
+| `local_id` | TEXT | PK縲ゞUID v7謗ｨ螂ｨ |
+| `idempotency_key` | TEXT | UNIQUE縲∝・騾∽ｸｭ縺ｫ荳榊､・|
 | `work_date` | TEXT | `YYYY-MM-DD` |
-| `punch_type` | TEXT | 4種類 |
-| `punched_at` | TEXT | オフセット付きISO 8601 |
-| `authentication_key_value` | TEXT | 送信完了まで必要。ログ・画面に非表示 |
-| `note` | TEXT NULL | 任意 |
-| `offline_at_creation` | INTEGER | 作成時通信状態 |
-| `status` | TEXT | 配送状態 |
-| `attempt_count` | INTEGER | 試行回数 |
-| `last_attempt_at` | TEXT NULL | 最終試行時刻 |
-| `last_error_code` | TEXT NULL | 安定したAPIエラーコード |
-| `last_error_message` | TEXT NULL | 秘密を除去した診断文 |
-| `server_punch_id` | TEXT NULL | 成功応答のID |
-| `server_response_json` | TEXT NULL | 原則保存しない。必要項目だけ列へ保存 |
-| `created_at` | TEXT | ローカル保存時刻 |
-| `sent_at` | TEXT NULL | サーバー送信完了時刻 |
+| `punch_type` | TEXT | 4遞ｮ鬘・|
+| `punched_at` | TEXT | 繧ｪ繝輔そ繝・ヨ莉倥″ISO 8601 |
+| `authentication_key_value` | TEXT | 騾∽ｿ｡螳御ｺ・∪縺ｧ蠢・ｦ√ゅΟ繧ｰ繝ｻ逕ｻ髱｢縺ｫ髱櫁｡ｨ遉ｺ |
+| `note` | TEXT NULL | 莉ｻ諢・|
+| `offline_at_creation` | INTEGER | 菴懈・譎る壻ｿ｡迥ｶ諷・|
+| `status` | TEXT | 驟埼∫憾諷・|
+| `attempt_count` | INTEGER | 隧ｦ陦悟屓謨ｰ |
+| `last_attempt_at` | TEXT NULL | 譛邨りｩｦ陦梧凾蛻ｻ |
+| `last_error_code` | TEXT NULL | 螳牙ｮ壹＠縺蘗PI繧ｨ繝ｩ繝ｼ繧ｳ繝ｼ繝・|
+| `last_error_message` | TEXT NULL | 遘伜ｯ・ｒ髯､蜴ｻ縺励◆險ｺ譁ｭ譁・|
+| `server_punch_id` | TEXT NULL | 謌仙粥蠢懃ｭ斐・ID |
+| `server_response_json` | TEXT NULL | 蜴溷援菫晏ｭ倥＠縺ｪ縺・ょｿ・ｦ・・岼縺縺大・縺ｸ菫晏ｭ・|
+| `created_at` | TEXT | 繝ｭ繝ｼ繧ｫ繝ｫ菫晏ｭ俶凾蛻ｻ |
+| `sent_at` | TEXT NULL | 繧ｵ繝ｼ繝舌・騾∽ｿ｡螳御ｺ・凾蛻ｻ |
 
-認証キーは未送信中に必要な個人識別データである。DB暗号化を初期版で採用しない場合は、
-アプリ専用内部ストレージ、バックアップ除外、`sent`後のキー消去、短い保持期間を必須とする。
-`sent`行は診断に必要な最小情報だけ残し、定期的に削除する。
-
+隱崎ｨｼ繧ｭ繝ｼ縺ｯ譛ｪ騾∽ｿ｡荳ｭ縺ｫ蠢・ｦ√↑蛟倶ｺｺ隴伜挨繝・・繧ｿ縺ｧ縺ゅｋ縲・B證怜捷蛹悶ｒ蛻晄悄迚医〒謗｡逕ｨ縺励↑縺・ｴ蜷医・縲・繧｢繝励Μ蟆ら畑蜀・Κ繧ｹ繝医Ξ繝ｼ繧ｸ縲√ヰ繝・け繧｢繝・・髯､螟悶～sent`蠕後・繧ｭ繝ｼ豸亥悉縲∫洒縺・ｿ晄戟譛滄俣繧貞ｿ・医→縺吶ｋ縲・`sent`陦後・險ｺ譁ｭ縺ｫ蠢・ｦ√↑譛蟆乗ュ蝣ｱ縺縺第ｮ九＠縲∝ｮ壽悄逧・↓蜑企勁縺吶ｋ縲・
 ### 9.2 `device_configuration`
 
-端末ID、端末名、ownership、API基底URL、pairedAtをDataStoreへ保存する。Bearerトークンだけは
-暗号化して別キーで保存し、設定データのdumpに混在させない。API基底URL変更は開発ビルドだけ
-許可し、本番はビルド設定で固定する。
-
-### 9.3 Roomトランザクションと排他
-
-1. NFC受付時に`pending`をinsertする。
-2. 送信処理はDBトランザクションで最古の送信対象を`pending/failed_retryable`から`sending`へ更新する。
-3. 即時送信とWorkerは同じ配送クラスを使い、同じ行を同時送信しない。
-4. 成功・失敗更新もトランザクションで行う。
-
-## 10. 通信・同期設計
-
-### 10.1 HTTPクライアント
-
-- Base URLは必ず末尾`/`を持つ。
-- 共通で`Accept: application/json`を付ける。
-- JSON本文時だけ`Content-Type: application/json`を付ける。
-- ペアリング交換用クライアントにはAuthorization interceptorを付けない。
-- 端末API用クライアントは保存済みトークンがある時だけBearerを付ける。
-- HTTP body loggingは本番無効。開発でもAuthorization、pairing code、認証キーをredactする。
-- 接続・読取・書込timeoutを明示し、通信例外をdomainの`AppError`へ変換する。
-
-### 10.2 打刻シーケンス
+遶ｯ譛ｫID縲∫ｫｯ譛ｫ蜷阪｛wnership縲、PI蝓ｺ蠎俵RL縲｝airedAt繧奪ataStore縺ｸ菫晏ｭ倥☆繧九・earer繝医・繧ｯ繝ｳ縺縺代・
+證怜捷蛹悶＠縺ｦ蛻･繧ｭ繝ｼ縺ｧ菫晏ｭ倥＠縲∬ｨｭ螳壹ョ繝ｼ繧ｿ縺ｮdump縺ｫ豺ｷ蝨ｨ縺輔○縺ｪ縺・・PI蝓ｺ蠎俵RL螟画峩縺ｯ髢狗匱繝薙Ν繝峨□縺・險ｱ蜿ｯ縺励∵悽逡ｪ縺ｯ繝薙Ν繝芽ｨｭ螳壹〒蝗ｺ螳壹☆繧九・
+### 9.3 Room繝医Λ繝ｳ繧ｶ繧ｯ繧ｷ繝ｧ繝ｳ縺ｨ謗剃ｻ・
+1. NFC蜿嶺ｻ俶凾縺ｫ`pending`繧段nsert縺吶ｋ縲・2. 騾∽ｿ｡蜃ｦ逅・・DB繝医Λ繝ｳ繧ｶ繧ｯ繧ｷ繝ｧ繝ｳ縺ｧ譛蜿､縺ｮ騾∽ｿ｡蟇ｾ雎｡繧蛋pending/failed_retryable`縺九ｉ`sending`縺ｸ譖ｴ譁ｰ縺吶ｋ縲・3. 蜊ｳ譎る∽ｿ｡縺ｨWorker縺ｯ蜷後§驟埼√け繝ｩ繧ｹ繧剃ｽｿ縺・∝酔縺倩｡後ｒ蜷梧凾騾∽ｿ｡縺励↑縺・・4. 謌仙粥繝ｻ螟ｱ謨玲峩譁ｰ繧ゅヨ繝ｩ繝ｳ繧ｶ繧ｯ繧ｷ繝ｧ繝ｳ縺ｧ陦後≧縲・
+## 10. 騾壻ｿ｡繝ｻ蜷梧悄險ｭ險・
+### 10.1 HTTP繧ｯ繝ｩ繧､繧｢繝ｳ繝・
+- Base URL縺ｯ蠢・★譛ｫ蟆ｾ`/`繧呈戟縺､縲・- 蜈ｱ騾壹〒`Accept: application/json`繧剃ｻ倥￠繧九・- JSON譛ｬ譁・凾縺縺疏Content-Type: application/json`繧剃ｻ倥￠繧九・- 繝壹い繝ｪ繝ｳ繧ｰ莠､謠帷畑繧ｯ繝ｩ繧､繧｢繝ｳ繝医↓縺ｯAuthorization interceptor繧剃ｻ倥￠縺ｪ縺・・- 遶ｯ譛ｫAPI逕ｨ繧ｯ繝ｩ繧､繧｢繝ｳ繝医・菫晏ｭ俶ｸ医∩繝医・繧ｯ繝ｳ縺後≠繧区凾縺縺腺earer繧剃ｻ倥￠繧九・- HTTP body logging縺ｯ譛ｬ逡ｪ辟｡蜉ｹ縲る幕逋ｺ縺ｧ繧・uthorization縲｝airing code縲∬ｪ崎ｨｼ繧ｭ繝ｼ繧池edact縺吶ｋ縲・- 謗･邯壹・隱ｭ蜿悶・譖ｸ霎ｼtimeout繧呈・遉ｺ縺励・壻ｿ｡萓句､悶ｒdomain縺ｮ`AppError`縺ｸ螟画鋤縺吶ｋ縲・
+### 10.2 謇灘綾繧ｷ繝ｼ繧ｱ繝ｳ繧ｹ
 
 ```mermaid
 sequenceDiagram
-    actor Employee as 社員
+    actor Employee as 遉ｾ蜩｡
     participant UI as PunchScreen
     participant UC as CreatePunchUseCase
     participant DB as Room
     participant API as DevicePunch API
-    Employee->>UI: 打刻種別を選択しカードをかざす
-    UI->>UC: 正規化済み認証キー + 端末時刻
-    UC->>UC: localId / idempotencyKeyを一度だけ生成
-    UC->>DB: pendingを保存
-    alt オンライン
-        UC->>DB: sendingへ排他更新
+    Employee->>UI: 謇灘綾遞ｮ蛻･繧帝∈謚槭＠繧ｫ繝ｼ繝峨ｒ縺九＊縺・    UI->>UC: 豁｣隕丞喧貂医∩隱崎ｨｼ繧ｭ繝ｼ + 遶ｯ譛ｫ譎ょ綾
+    UC->>UC: localId / idempotencyKey繧剃ｸ蠎ｦ縺縺醍函謌・    UC->>DB: pending繧剃ｿ晏ｭ・    alt 繧ｪ繝ｳ繝ｩ繧､繝ｳ
+        UC->>DB: sending縺ｸ謗剃ｻ匁峩譁ｰ
         UC->>API: POST /device-punches
-        alt 成功または同一冪等キーの既存結果
-            API-->>UC: 打刻結果
-            UC->>DB: sentへ更新・認証キー消去
-            UC-->>UI: 成功表示
-        else 再試行可能
+        alt 謌仙粥縺ｾ縺溘・蜷御ｸ蜀ｪ遲峨く繝ｼ縺ｮ譌｢蟄倡ｵ先棡
+            API-->>UC: 謇灘綾邨先棡
+            UC->>DB: sent縺ｸ譖ｴ譁ｰ繝ｻ隱崎ｨｼ繧ｭ繝ｼ豸亥悉
+            UC-->>UI: 謌仙粥陦ｨ遉ｺ
+        else 蜀崎ｩｦ陦悟庄閭ｽ
             UC->>DB: failed_retryable
-            UC-->>UI: 端末保存済み表示
-        else 恒久エラー
+            UC-->>UI: 遶ｯ譛ｫ菫晏ｭ俶ｸ医∩陦ｨ遉ｺ
+        else 諱剃ｹ・お繝ｩ繝ｼ
             UC->>DB: failed_permanent
-            UC-->>UI: エラー表示
+            UC-->>UI: 繧ｨ繝ｩ繝ｼ陦ｨ遉ｺ
         end
-    else オフライン
-        UC-->>UI: オフライン保存済み表示
+    else 繧ｪ繝輔Λ繧､繝ｳ
+        UC-->>UI: 繧ｪ繝輔Λ繧､繝ｳ菫晏ｭ俶ｸ医∩陦ｨ遉ｺ
     end
 ```
 
 ### 10.3 WorkManager
 
-- `NetworkType.CONNECTED`制約を使う。
-- Unique Work名を固定し、重複Workerを避ける。
-- オンデマンド再送と定期再送を同じUseCaseへ接続する。
-- `punched_at`, `created_at`昇順で1件ずつ送る。
-- 429の`Retry-After`を尊重し、それ以外は指数バックオフを使う。
-- Workerの入力Dataにトークンや認証キーを格納しない。DBの`local_id`だけを渡す。
-- 401を受けたら後続送信を止める。
-
+- `NetworkType.CONNECTED`蛻ｶ邏・ｒ菴ｿ縺・・- Unique Work蜷阪ｒ蝗ｺ螳壹＠縲・㍾隍Ⅳorker繧帝∩縺代ｋ縲・- 繧ｪ繝ｳ繝・・繝ｳ繝牙・騾√→螳壽悄蜀埼√ｒ蜷後§UseCase縺ｸ謗･邯壹☆繧九・- `punched_at`, `created_at`譏・・〒1莉ｶ縺壹▽騾√ｋ縲・- 429縺ｮ`Retry-After`繧貞ｰ企㍾縺励√◎繧御ｻ･螟悶・謖・焚繝舌ャ繧ｯ繧ｪ繝輔ｒ菴ｿ縺・・- Worker縺ｮ蜈･蜉侫ata縺ｫ繝医・繧ｯ繝ｳ繧・ｪ崎ｨｼ繧ｭ繝ｼ繧呈ｼ邏阪＠縺ｪ縺・・B縺ｮ`local_id`縺縺代ｒ貂｡縺吶・- 401繧貞女縺代◆繧牙ｾ檎ｶ夐∽ｿ｡繧呈ｭ｢繧√ｋ縲・
 ### 10.4 work_date
 
-現行`flow-office`では「今日」は社員の`users.timezone`で決めるが、共有端末は認証キーを解決する
-前に社員のtimezoneを知らない。夜勤の日跨ぎもあるため、端末ローカル日付だけでは確定できない。
-
-現行バックエンドは送信された`work_date`をそのまま保存し、社員timezoneや勤務予定による補正を
-行わない。初期実装は端末ローカル日付を使う。夜勤・日跨ぎは既知の制約として診断情報へ残し、
-勤務日判定APIまたは端末別の勤務日境界がバックエンドへ追加された段階でresolverを差し替える。
-
-## 11. API契約（現行実装）
-
-本章は`flow-office`のController、Resource、Feature Testで確認した現行契約である。レスポンスに
-存在しない値はAndroid DTOでnullableにし、推測で必須化しない。
-
-### 11.1 ペアリング交換
-
-`POST /api/devices/pairing/exchange`は認証なしで呼ぶ。端末IDは整数、管理画面が発行するコードは
-8文字、有効期限15分、ハッシュ保存、交換後に破棄される。
-
+迴ｾ陦形flow-office`縺ｧ縺ｯ縲御ｻ頑律縲阪・遉ｾ蜩｡縺ｮ`users.timezone`縺ｧ豎ｺ繧√ｋ縺後∝・譛臥ｫｯ譛ｫ縺ｯ隱崎ｨｼ繧ｭ繝ｼ繧定ｧ｣豎ｺ縺吶ｋ
+蜑阪↓遉ｾ蜩｡縺ｮtimezone繧堤衍繧峨↑縺・ょ､懷共縺ｮ譌･霍ｨ縺弱ｂ縺ゅｋ縺溘ａ縲∫ｫｯ譛ｫ繝ｭ繝ｼ繧ｫ繝ｫ譌･莉倥□縺代〒縺ｯ遒ｺ螳壹〒縺阪↑縺・・
+迴ｾ陦後ヰ繝・け繧ｨ繝ｳ繝峨・騾∽ｿ｡縺輔ｌ縺歔work_date`繧偵◎縺ｮ縺ｾ縺ｾ菫晏ｭ倥＠縲∫､ｾ蜩｡timezone繧・共蜍吩ｺ亥ｮ壹↓繧医ｋ陬懈ｭ｣繧・陦後ｏ縺ｪ縺・ょ・譛溷ｮ溯｣・・遶ｯ譛ｫ繝ｭ繝ｼ繧ｫ繝ｫ譌･莉倥ｒ菴ｿ縺・ょ､懷共繝ｻ譌･霍ｨ縺弱・譌｢遏･縺ｮ蛻ｶ邏・→縺励※險ｺ譁ｭ諠・ｱ縺ｸ谿九＠縲・蜍､蜍呎律蛻､螳哂PI縺ｾ縺溘・遶ｯ譛ｫ蛻･縺ｮ蜍､蜍呎律蠅・阜縺後ヰ繝・け繧ｨ繝ｳ繝峨∈霑ｽ蜉縺輔ｌ縺滓ｮｵ髫弱〒resolver繧貞ｷｮ縺玲崛縺医ｋ縲・
+## 11. API螂醍ｴ・ｼ育樟陦悟ｮ溯｣・ｼ・
+譛ｬ遶縺ｯ`flow-office`縺ｮController縲ヽesource縲：eature Test縺ｧ遒ｺ隱阪＠縺溽樟陦悟･醍ｴ・〒縺ゅｋ縲ゅΞ繧ｹ繝昴Φ繧ｹ縺ｫ
+蟄伜惠縺励↑縺・､縺ｯAndroid DTO縺ｧnullable縺ｫ縺励∵耳貂ｬ縺ｧ蠢・亥喧縺励↑縺・・
+### 11.1 繝壹い繝ｪ繝ｳ繧ｰ莠､謠・
+`POST /api/devices/pairing/exchange`縺ｯ隱崎ｨｼ縺ｪ縺励〒蜻ｼ縺ｶ縲らｫｯ譛ｫID縺ｯ謨ｴ謨ｰ縲∫ｮ｡逅・判髱｢縺檎匱陦後☆繧九さ繝ｼ繝峨・
+8譁・ｭ励∵怏蜉ｹ譛滄剞15蛻・√ワ繝・す繝･菫晏ｭ倥∽ｺ､謠帛ｾ後↓遐ｴ譽・＆繧後ｋ縲・
 ```json
 {
   "device_id": 123,
@@ -414,7 +322,7 @@ sequenceDiagram
   "device": {
     "id": 123,
     "owner_type": "organization_shared",
-    "name": "名古屋本社入口",
+    "name": "蜷榊商螻区悽遉ｾ蜈･蜿｣",
     "device_type": "android",
     "status": "active",
     "allowed_punch_types": null,
@@ -426,13 +334,10 @@ sequenceDiagram
 }
 ```
 
-Android DTOは`access_token`ではなく`token`を読む。交換時点で端末role由来のSanctum ability
-（共有打刻端末は`recorder:punch`）が発行される。
-
-### 11.2 本人特定
-
-`POST /api/devices/identity/resolve`（ability `identity:resolve`または`recorder:punch`）
-
+Android DTO縺ｯ`access_token`縺ｧ縺ｯ縺ｪ縺汁token`繧定ｪｭ繧縲ゆｺ､謠帶凾轤ｹ縺ｧ遶ｯ譛ｫrole逕ｱ譚･縺ｮSanctum ability
+・亥・譛画遠蛻ｻ遶ｯ譛ｫ縺ｯ`recorder:punch`・峨′逋ｺ陦後＆繧後ｋ縲・
+### 11.2 譛ｬ莠ｺ迚ｹ螳・
+`POST /api/devices/identity/resolve`・・bility `identity:resolve`縺ｾ縺溘・`recorder:punch`・・
 ```json
 { "authentication_key_value": "04A22419CC2180" }
 ```
@@ -440,18 +345,16 @@ Android DTOは`access_token`ではなく`token`を読む。交換時点で端末
 ```json
 {
   "user_id": 42,
-  "name": "永野 ゆうと",
+  "name": "豌ｸ驥・繧・≧縺ｨ",
   "authentication_key_id": 10
 }
 ```
 
-通常打刻は`POST /device-punches`内で認証キーを再解決する。本人特定APIは診断または特殊な
-事前表示モードだけに使い、その結果を打刻の認証済み証明として扱わない。
+騾壼ｸｸ謇灘綾縺ｯ`POST /device-punches`蜀・〒隱崎ｨｼ繧ｭ繝ｼ繧貞・隗｣豎ｺ縺吶ｋ縲よ悽莠ｺ迚ｹ螳哂PI縺ｯ險ｺ譁ｭ縺ｾ縺溘・迚ｹ谿翫↑
+莠句燕陦ｨ遉ｺ繝｢繝ｼ繝峨□縺代↓菴ｿ縺・√◎縺ｮ邨先棡繧呈遠蛻ｻ縺ｮ隱崎ｨｼ貂医∩險ｼ譏弱→縺励※謇ｱ繧上↑縺・・
+### 11.3 遶ｯ譛ｫ謇灘綾
 
-### 11.3 端末打刻
-
-`POST /api/device-punches`（共有端末はability `recorder:punch`）
-
+`POST /api/device-punches`・亥・譛臥ｫｯ譛ｫ縺ｯability `recorder:punch`・・
 ```json
 {
   "work_date": "2026-07-19",
@@ -464,9 +367,8 @@ Android DTOは`access_token`ではなく`token`を読む。交換時点で端末
 }
 ```
 
-共有端末では`authentication_key_value`が実質必須である。成功は現状`200 OK`で
-`AttendancePunchResource`を返す。
-
+蜈ｱ譛臥ｫｯ譛ｫ縺ｧ縺ｯ`authentication_key_value`縺悟ｮ溯ｳｪ蠢・医〒縺ゅｋ縲よ・蜉溘・迴ｾ迥ｶ`200 OK`縺ｧ
+`AttendancePunchResource`繧定ｿ斐☆縲・
 ```json
 {
   "id": 4567,
@@ -485,294 +387,180 @@ Android DTOは`access_token`ではなく`token`を読む。交換時点で端末
 }
 ```
 
-レスポンスに社員名、`idempotency_key`、サーバー受信時刻、利用者向けmessageはない。したがって
-初期版の成功表示は打刻種別と時刻を主とし、社員名は事前resolveを有効にした場合だけ表示する。
-同一`idempotency_key`の再送は既存行を返し、新しい打刻を作らない。
-
-### 11.4 ハートビート
-
-`POST /api/devices/heartbeat`は`auth:sanctum`配下で、共有打刻端末の`recorder:punch`でも呼べる。
-現行の受付本文は次だけである。
-
+繝ｬ繧ｹ繝昴Φ繧ｹ縺ｫ遉ｾ蜩｡蜷阪～idempotency_key`縲√し繝ｼ繝舌・蜿嶺ｿ｡譎ょ綾縲∝茜逕ｨ閠・髄縺僧essage縺ｯ縺ｪ縺・ゅ＠縺溘′縺｣縺ｦ
+蛻晄悄迚医・謌仙粥陦ｨ遉ｺ縺ｯ謇灘綾遞ｮ蛻･縺ｨ譎ょ綾繧剃ｸｻ縺ｨ縺励∫､ｾ蜩｡蜷阪・莠句燕resolve繧呈怏蜉ｹ縺ｫ縺励◆蝣ｴ蜷医□縺題｡ｨ遉ｺ縺吶ｋ縲・蜷御ｸ`idempotency_key`縺ｮ蜀埼√・譌｢蟄倩｡後ｒ霑斐＠縲∵眠縺励＞謇灘綾繧剃ｽ懊ｉ縺ｪ縺・・
+### 11.4 繝上・繝医ン繝ｼ繝・
+`POST /api/devices/heartbeat`縺ｯ`auth:sanctum`驟堺ｸ九〒縲∝・譛画遠蛻ｻ遶ｯ譛ｫ縺ｮ`recorder:punch`縺ｧ繧ょ他縺ｹ繧九・迴ｾ陦後・蜿嶺ｻ俶悽譁・・谺｡縺縺代〒縺ゅｋ縲・
 ```json
 { "app_version": "1.0.0" }
 ```
 
-成功時は更新後の`DeviceResource`を`200 OK`で返し、サーバーが`last_seen_at`を更新する。
-OSバージョン、未送信件数、端末時刻は現行APIへ送らない。
+謌仙粥譎ゅ・譖ｴ譁ｰ蠕後・`DeviceResource`繧蛋200 OK`縺ｧ霑斐＠縲√し繝ｼ繝舌・縺形last_seen_at`繧呈峩譁ｰ縺吶ｋ縲・OS繝舌・繧ｸ繝ｧ繝ｳ縲∵悴騾∽ｿ｡莉ｶ謨ｰ縲∫ｫｯ譛ｫ譎ょ綾縺ｯ迴ｾ陦窟PI縺ｸ騾√ｉ縺ｪ縺・・
+### 11.5 繧ｨ繝ｩ繝ｼ譛ｬ譁・
+Laravel validation縺ｯ`message`縺ｨ`errors`縲√ラ繝｡繧､繝ｳ繝ｫ繝ｼ繝ｫ驕募渚縺ｯ荳ｻ縺ｫ`message`繧定ｿ斐☆縲ょｮ牙ｮ壹＠縺・`error_code`縺ｯ譛ｪ螳溯｣・・縺溘ａ縲、ndroid縺ｮ蛻ｶ蠕｡縺ｯHTTP status繧堤ｬｬ荳縺ｫ縺吶ｋ縲・22縺ｮ蛻ｩ逕ｨ閠・髄縺第枚險縺ｯ
+隱崎ｨｼ繧ｭ繝ｼ髢｢騾｣縺ｪ縺ｩ螳牙・縺ｨ遒ｺ隱阪〒縺阪◆譌｢遏･繧ｱ繝ｼ繧ｹ縺縺代ｒ螟画鋤縺励∵悴遏･縺ｮ繧ｵ繝ｼ繝舌・譁・ｨ縺ｯ縺昴・縺ｾ縺ｾ陦ｨ遉ｺ縺励↑縺・・
+## 12. 繝舌ャ繧ｯ繧ｨ繝ｳ繝蛾｣謳ｺ險ｭ險茨ｼ亥ｮ溯｣・｢ｺ隱搾ｼ・
+### 12.1 隱崎ｨｼ縺ｨ隱榊庄
 
-### 11.5 エラー本文
+- `Device`縺ｯSanctum `HasApiTokens`繧呈戟縺､隱崎ｨｼ荳ｻ菴薙〒縺ゅｋ縲・- 莠ｺ髢灘髄縺鷹壼ｸｸ繝医・繧ｯ繝ｳ縺ｯability `*`縲∝・譛画遠蛻ｻ遶ｯ譛ｫ縺ｯ`recorder:punch`縺ｧ蛻・屬縺輔ｌ繧九・- 髯仙ｮ壹ヨ繝ｼ繧ｯ繝ｳ縺ｯability縺梧・險倥＆繧後◆繝ｫ繝ｼ繝井ｻ･螟悶ｒ繧ｰ繝ｭ繝ｼ繝舌Νmiddleware縺ｧ諡貞凄縺吶ｋ縲・- `DevicePunchController`縺ｯ隱崎ｨｼ荳ｻ菴薙′`Device`縺ｧ縺ゅｋ縺薙→繧堤｢ｺ隱阪＠縲∝・譛臥ｫｯ譛ｫ縺ｧ縺ｯ隱崎ｨｼ繧ｭ繝ｼ縺九ｉ遉ｾ蜩｡繧定ｧ｣豎ｺ縺吶ｋ縲・- 蛟倶ｺｺ遶ｯ譛ｫ縺ｯ`owner_user_id`譛ｬ莠ｺ縺ｨ縺励※謇灘綾縺励∬ｪ崎ｨｼ繧ｭ繝ｼ繧定ｦ∵ｱゅ＠縺ｪ縺・・- 蛛懈ｭ｢繝ｻ螟ｱ蜉ｹ蜃ｦ逅・・遶ｯ譛ｫ縺ｮSanctum token繧貞炎髯､縺吶ｋ縺溘ａ縲∽ｻ･髯阪・401縺ｫ縺ｪ繧九・
+### 12.2 螳溯｣・ｸ医∩繝・・繧ｿ
 
-Laravel validationは`message`と`errors`、ドメインルール違反は主に`message`を返す。安定した
-`error_code`は未実装のため、Androidの制御はHTTP statusを第一にする。422の利用者向け文言は
-認証キー関連など安全と確認できた既知ケースだけを変換し、未知のサーバー文言はそのまま表示しない。
-
-## 12. バックエンド連携設計（実装確認）
-
-### 12.1 認証と認可
-
-- `Device`はSanctum `HasApiTokens`を持つ認証主体である。
-- 人間向け通常トークンはability `*`、共有打刻端末は`recorder:punch`で分離される。
-- 限定トークンはabilityが明記されたルート以外をグローバルmiddlewareで拒否する。
-- `DevicePunchController`は認証主体が`Device`であることを確認し、共有端末では認証キーから社員を解決する。
-- 個人端末は`owner_user_id`本人として打刻し、認証キーを要求しない。
-- 停止・失効処理は端末のSanctum tokenを削除するため、以降は401になる。
-
-### 12.2 実装済みデータ
-
-| テーブル／項目 | 用途 |
+| 繝・・繝悶Ν・城・岼 | 逕ｨ騾・|
 |---|---|
-| `devices` | 整数ID、owner、type、status、設定、heartbeat、ペアリング情報 |
-| `device_roles` | `attendance_reader`等。token abilityの元 |
-| `device_scopes` | 外部端末向け個別scope |
-| `authentication_keys` | 社員認証キー。生値は保存せずHMAC-SHA-256 |
-| `authentication_key_device_rules` | キーを利用可能な端末／siteの制限 |
-| `attendance_punches.device_id` | 打刻元端末 |
-| `attendance_punches.authentication_key_id` | 解決に使ったキー |
-| `attendance_punches.offline` | オフライン発生フラグ |
-| `attendance_punches.idempotency_key` | nullable、全体UNIQUE |
+| `devices` | 謨ｴ謨ｰID縲｛wner縲》ype縲《tatus縲∬ｨｭ螳壹”eartbeat縲√・繧｢繝ｪ繝ｳ繧ｰ諠・ｱ |
+| `device_roles` | `attendance_reader`遲峨Ｕoken ability縺ｮ蜈・|
+| `device_scopes` | 螟夜Κ遶ｯ譛ｫ蜷代￠蛟句挨scope |
+| `authentication_keys` | 遉ｾ蜩｡隱崎ｨｼ繧ｭ繝ｼ縲ら函蛟､縺ｯ菫晏ｭ倥○縺唏MAC-SHA-256 |
+| `authentication_key_device_rules` | 繧ｭ繝ｼ繧貞茜逕ｨ蜿ｯ閭ｽ縺ｪ遶ｯ譛ｫ・峻ite縺ｮ蛻ｶ髯・|
+| `attendance_punches.device_id` | 謇灘綾蜈・ｫｯ譛ｫ |
+| `attendance_punches.authentication_key_id` | 隗｣豎ｺ縺ｫ菴ｿ縺｣縺溘く繝ｼ |
+| `attendance_punches.offline` | 繧ｪ繝輔Λ繧､繝ｳ逋ｺ逕溘ヵ繝ｩ繧ｰ |
+| `attendance_punches.idempotency_key` | nullable縲∝・菴填NIQUE |
 
-### 12.3 打刻処理
-
-1. route middlewareがSanctum abilityを検証する。
-2. 共有端末は認証キーをHMAC化し、有効期間・status・device ruleを検証する。
-3. `RecordAttendancePunchHandler`が同じ`idempotency_key`の既存行を検索し、あれば返す。
-4. offset付き時刻を壁時計時刻と`utc_offset_minutes`へ分離して保存する。
-5. `attendance_punch.recorded`相当の既存イベントをEventStoreへ追記する。
-6. `AttendanceDayPunchSyncer`が整合する打刻群だけを日次勤怠へ反映する。
-
-端末登録・ペアリング・停止・失効・認証キー発行／無効化はCommand/EventStore方針に沿う。
-heartbeatは高頻度テレメトリとして意図的に直接更新される。
-
-### 12.4 Androidが依存してよい契約
-
-Androidが直接依存するのは、URL、HTTP method、request/response DTO、status code、Sanctum Bearer
-だけとする。バックエンドのEloquent名、Event名、HMAC方式をAndroidへ複製しない。認証キーは
-正規化済み生値をTLS上で送り、ハッシュ化と社員解決は常にサーバーへ任せる。
-
-## 13. HTTPエラー分類
-
-| 条件 | ローカル状態 | 再送 | UI |
+### 12.3 謇灘綾蜃ｦ逅・
+1. route middleware縺郡anctum ability繧呈､懆ｨｼ縺吶ｋ縲・2. 蜈ｱ譛臥ｫｯ譛ｫ縺ｯ隱崎ｨｼ繧ｭ繝ｼ繧辿MAC蛹悶＠縲∵怏蜉ｹ譛滄俣繝ｻstatus繝ｻdevice rule繧呈､懆ｨｼ縺吶ｋ縲・3. `RecordAttendancePunchHandler`縺悟酔縺倭idempotency_key`縺ｮ譌｢蟄倩｡後ｒ讀懃ｴ｢縺励√≠繧後・霑斐☆縲・4. offset莉倥″譎ょ綾繧貞｣∵凾險域凾蛻ｻ縺ｨ`utc_offset_minutes`縺ｸ蛻・屬縺励※菫晏ｭ倥☆繧九・5. `attendance_punch.recorded`逶ｸ蠖薙・譌｢蟄倥う繝吶Φ繝医ｒEventStore縺ｸ霑ｽ險倥☆繧九・6. `AttendanceDayPunchSyncer`縺梧紛蜷医☆繧区遠蛻ｻ鄒､縺縺代ｒ譌･谺｡蜍､諤縺ｸ蜿肴丐縺吶ｋ縲・
+遶ｯ譛ｫ逋ｻ骭ｲ繝ｻ繝壹い繝ｪ繝ｳ繧ｰ繝ｻ蛛懈ｭ｢繝ｻ螟ｱ蜉ｹ繝ｻ隱崎ｨｼ繧ｭ繝ｼ逋ｺ陦鯉ｼ冗┌蜉ｹ蛹悶・Command/EventStore譁ｹ驥昴↓豐ｿ縺・・heartbeat縺ｯ鬮倬ｻ蠎ｦ繝・Ξ繝｡繝医Μ縺ｨ縺励※諢丞峙逧・↓逶ｴ謗･譖ｴ譁ｰ縺輔ｌ繧九・
+### 12.4 Android縺御ｾ晏ｭ倥＠縺ｦ繧医＞螂醍ｴ・
+Android縺檎峩謗･萓晏ｭ倥☆繧九・縺ｯ縲ゞRL縲？TTP method縲〉equest/response DTO縲《tatus code縲ヾanctum Bearer
+縺縺代→縺吶ｋ縲ゅヰ繝・け繧ｨ繝ｳ繝峨・Eloquent蜷阪・vent蜷阪？MAC譁ｹ蠑上ｒAndroid縺ｸ隍・｣ｽ縺励↑縺・りｪ崎ｨｼ繧ｭ繝ｼ縺ｯ
+豁｣隕丞喧貂医∩逕溷､繧探LS荳翫〒騾√ｊ縲√ワ繝・す繝･蛹悶→遉ｾ蜩｡隗｣豎ｺ縺ｯ蟶ｸ縺ｫ繧ｵ繝ｼ繝舌・縺ｸ莉ｻ縺帙ｋ縲・
+## 13. HTTP繧ｨ繝ｩ繝ｼ蛻・｡・
+| 譚｡莉ｶ | 繝ｭ繝ｼ繧ｫ繝ｫ迥ｶ諷・| 蜀埼・| UI |
 |---|---|---|---|
-| 2xx | `sent` | なし | 成功 |
-| 同一冪等キーの既存成功 | `sent` | なし | 成功 |
-| 400 | `failed_permanent` | なし | 入力不正 |
-| 401 | `pending_auth` | 認証復旧まで停止 | 再ペアリング案内 |
-| 403 | `failed_permanent` | 自動なし | 端末権限を管理者へ確認 |
-| 404 | `failed_permanent` | なし | 一般エラー（認証キー不明は現状422） |
-| 409 | `failed_permanent` | なし | 一般エラー（現行打刻APIは通常返さない） |
-| 422 | `failed_permanent` | なし | validation／認証キーエラーの安全な定型文 |
-| 429 | `failed_retryable` | `Retry-After`後 | 端末保存済み |
-| 5xx | `failed_retryable` | 指数バックオフ | 端末保存済み |
-| timeout/IO例外 | `failed_retryable` | 指数バックオフ | 端末保存済み |
+| 2xx | `sent` | 縺ｪ縺・| 謌仙粥 |
+| 蜷御ｸ蜀ｪ遲峨く繝ｼ縺ｮ譌｢蟄俶・蜉・| `sent` | 縺ｪ縺・| 謌仙粥 |
+| 400 | `failed_permanent` | 縺ｪ縺・| 蜈･蜉帑ｸ肴ｭ｣ |
+| 401 | `pending_auth` | 隱崎ｨｼ蠕ｩ譌ｧ縺ｾ縺ｧ蛛懈ｭ｢ | 蜀阪・繧｢繝ｪ繝ｳ繧ｰ譯亥・ |
+| 403 | `failed_permanent` | 閾ｪ蜍輔↑縺・| 遶ｯ譛ｫ讓ｩ髯舌ｒ邂｡逅・・∈遒ｺ隱・|
+| 404 | `failed_permanent` | 縺ｪ縺・| 荳闊ｬ繧ｨ繝ｩ繝ｼ・郁ｪ崎ｨｼ繧ｭ繝ｼ荳肴・縺ｯ迴ｾ迥ｶ422・・|
+| 409 | `failed_permanent` | 縺ｪ縺・| 荳闊ｬ繧ｨ繝ｩ繝ｼ・育樟陦梧遠蛻ｻAPI縺ｯ騾壼ｸｸ霑斐＆縺ｪ縺・ｼ・|
+| 422 | `failed_permanent` | 縺ｪ縺・| validation・剰ｪ崎ｨｼ繧ｭ繝ｼ繧ｨ繝ｩ繝ｼ縺ｮ螳牙・縺ｪ螳壼梛譁・|
+| 429 | `failed_retryable` | `Retry-After`蠕・| 遶ｯ譛ｫ菫晏ｭ俶ｸ医∩ |
+| 5xx | `failed_retryable` | 謖・焚繝舌ャ繧ｯ繧ｪ繝・| 遶ｯ譛ｫ菫晏ｭ俶ｸ医∩ |
+| timeout/IO萓句､・| `failed_retryable` | 謖・焚繝舌ャ繧ｯ繧ｪ繝・| 遶ｯ譛ｫ菫晏ｭ俶ｸ医∩ |
 
-API内部の例外文、スタックトレース、URL、トークンは利用者向け画面へ表示しない。
-
-## 14. UI設計
-
-### 14.1 ナビゲーション
+API蜀・Κ縺ｮ萓句､匁枚縲√せ繧ｿ繝・け繝医Ξ繝ｼ繧ｹ縲ゞRL縲√ヨ繝ｼ繧ｯ繝ｳ縺ｯ蛻ｩ逕ｨ閠・髄縺醍判髱｢縺ｸ陦ｨ遉ｺ縺励↑縺・・
+## 14. UI險ｭ險・
+### 14.1 繝翫ン繧ｲ繝ｼ繧ｷ繝ｧ繝ｳ
 
 ```text
-起動
-├─ 未ペアリング ─ PairingScreen
-└─ ペアリング済み ─ PunchScreen
-                       ├─ SettingsScreen
-                       └─ DiagnosticsScreen
+襍ｷ蜍・笏懌楳 譛ｪ繝壹い繝ｪ繝ｳ繧ｰ 笏 PairingScreen
+笏披楳 繝壹い繝ｪ繝ｳ繧ｰ貂医∩ 笏 PunchScreen
+                       笏懌楳 SettingsScreen
+                       笏披楳 DiagnosticsScreen
 ```
 
 ### 14.2 PairingScreen
 
-- APIサーバーURL（debugのみ編集可）
-- 端末ID
-- 8文字のペアリングコード
-- ペアリングボタン、進行中表示、入力／通信エラー
-- QR入力を後付けできる`PairingInputSource` interface
-- コード表示中・診断画面では必要に応じ`FLAG_SECURE`
+- API繧ｵ繝ｼ繝舌・URL・・ebug縺ｮ縺ｿ邱ｨ髮・庄・・- 遶ｯ譛ｫID
+- 8譁・ｭ励・繝壹い繝ｪ繝ｳ繧ｰ繧ｳ繝ｼ繝・- 繝壹い繝ｪ繝ｳ繧ｰ繝懊ち繝ｳ縲・ｲ陦御ｸｭ陦ｨ遉ｺ縲∝・蜉幢ｼ城壻ｿ｡繧ｨ繝ｩ繝ｼ
+- QR蜈･蜉帙ｒ蠕御ｻ倥￠縺ｧ縺阪ｋ`PairingInputSource` interface
+- 繧ｳ繝ｼ繝芽｡ｨ遉ｺ荳ｭ繝ｻ險ｺ譁ｭ逕ｻ髱｢縺ｧ縺ｯ蠢・ｦ√↓蠢懊§`FLAG_SECURE`
 
-成功は「トークン暗号化保存 + 端末設定保存」が両方完了した時点とする。片方だけ失敗した場合は
-ローカル情報をロールバックし、交換済みコードの再利用不能を説明して管理者へ再発行を依頼する。
-
+謌仙粥縺ｯ縲後ヨ繝ｼ繧ｯ繝ｳ證怜捷蛹紋ｿ晏ｭ・+ 遶ｯ譛ｫ險ｭ螳壻ｿ晏ｭ倥阪′荳｡譁ｹ螳御ｺ・＠縺滓凾轤ｹ縺ｨ縺吶ｋ縲ら援譁ｹ縺縺大､ｱ謨励＠縺溷ｴ蜷医・
+繝ｭ繝ｼ繧ｫ繝ｫ諠・ｱ繧偵Ο繝ｼ繝ｫ繝舌ャ繧ｯ縺励∽ｺ､謠帶ｸ医∩繧ｳ繝ｼ繝峨・蜀榊茜逕ｨ荳崎・繧定ｪｬ譏弱＠縺ｦ邂｡逅・・∈蜀咲匱陦後ｒ萓晞ｼ縺吶ｋ縲・
 ### 14.3 PunchScreen
 
-- 端末名、現在時刻、オンライン状態、未送信件数
-- 4種類の大きな打刻種別ボタン
-- 選択中種別と「社員証をかざしてください」
-- NFC無効／非対応の明確な案内
-- 成功、オフライン保存、恒久エラーを色・アイコン・文字・音／振動の複数手段で通知
-- 成功表示は2〜3秒後に待受へ戻す
-- 処理中の種別変更と二重読取を抑止するが、UIフリーズはさせない
-
-「オフライン保存」はサーバーでの打刻完了ではないため、文言を分ける。
-
+- 遶ｯ譛ｫ蜷阪∫樟蝨ｨ譎ょ綾縲√が繝ｳ繝ｩ繧､繝ｳ迥ｶ諷九∵悴騾∽ｿ｡莉ｶ謨ｰ
+- 4遞ｮ鬘槭・螟ｧ縺阪↑謇灘綾遞ｮ蛻･繝懊ち繝ｳ
+- 驕ｸ謚樔ｸｭ遞ｮ蛻･縺ｨ縲檎､ｾ蜩｡險ｼ繧偵°縺悶＠縺ｦ縺上□縺輔＞縲・- NFC辟｡蜉ｹ・城撼蟇ｾ蠢懊・譏守｢ｺ縺ｪ譯亥・
+- 謌仙粥縲√が繝輔Λ繧､繝ｳ菫晏ｭ倥∵￡荵・お繝ｩ繝ｼ繧定牡繝ｻ繧｢繧､繧ｳ繝ｳ繝ｻ譁・ｭ励・髻ｳ・乗険蜍輔・隍・焚謇区ｮｵ縺ｧ騾夂衍
+- 謌仙粥陦ｨ遉ｺ縺ｯ2縲・遘貞ｾ後↓蠕・女縺ｸ謌ｻ縺・- 蜃ｦ逅・ｸｭ縺ｮ遞ｮ蛻･螟画峩縺ｨ莠碁㍾隱ｭ蜿悶ｒ謚第ｭ｢縺吶ｋ縺後ゞI繝輔Μ繝ｼ繧ｺ縺ｯ縺輔○縺ｪ縺・
+縲後が繝輔Λ繧､繝ｳ菫晏ｭ倥阪・繧ｵ繝ｼ繝舌・縺ｧ縺ｮ謇灘綾螳御ｺ・〒縺ｯ縺ｪ縺・◆繧√∵枚險繧貞・縺代ｋ縲・
 ```text
-オフラインで打刻を保存しました
-通信復旧後に自動送信します
-```
+繧ｪ繝輔Λ繧､繝ｳ縺ｧ謇灘綾繧剃ｿ晏ｭ倥＠縺ｾ縺励◆
+騾壻ｿ｡蠕ｩ譌ｧ蠕後↓閾ｪ蜍暮∽ｿ｡縺励∪縺・```
 
 ### 14.4 DiagnosticsScreen
 
-表示してよいもの:
+陦ｨ遉ｺ縺励※繧医＞繧ゅ・:
 
-- アプリ／Androidバージョン
-- 端末ID（必要なら末尾のみ）・端末名・ownership・pairing状態
-- APIホスト名（秘密を含むquery等は除外）
-- 最終成功通信、最終heartbeat、未送信／恒久失敗件数
-- NFC対応・有効状態、ネットワーク状態
-- 端末側で生成した相関ID、HTTP status、秘密を除去した診断コード
+- 繧｢繝励Μ・就ndroid繝舌・繧ｸ繝ｧ繝ｳ
+- 遶ｯ譛ｫID・亥ｿ・ｦ√↑繧画忰蟆ｾ縺ｮ縺ｿ・峨・遶ｯ譛ｫ蜷阪・ownership繝ｻpairing迥ｶ諷・- API繝帙せ繝亥錐・育ｧ伜ｯ・ｒ蜷ｫ繧query遲峨・髯､螟厄ｼ・- 譛邨よ・蜉滄壻ｿ｡縲∵怙邨Ｉeartbeat縲∵悴騾∽ｿ｡・乗￡荵・､ｱ謨嶺ｻｶ謨ｰ
+- NFC蟇ｾ蠢懊・譛牙柑迥ｶ諷九√ロ繝・ヨ繝ｯ繝ｼ繧ｯ迥ｶ諷・- 遶ｯ譛ｫ蛛ｴ縺ｧ逕滓・縺励◆逶ｸ髢｢ID縲？TTP status縲∫ｧ伜ｯ・ｒ髯､蜴ｻ縺励◆險ｺ譁ｭ繧ｳ繝ｼ繝・
+陦ｨ遉ｺ縺励↑縺・ｂ縺ｮ:
 
-表示しないもの:
+- Bearer繝医・繧ｯ繝ｳ縲√・繧｢繝ｪ繝ｳ繧ｰ繧ｳ繝ｼ繝・- 螳悟・縺ｪNFC UID・剰ｪ崎ｨｼ繧ｭ繝ｼ
+- 蛟倶ｺｺ蜷阪→隱崎ｨｼ繧ｭ繝ｼ縺ｮ蟇ｾ蠢・- 繧ｹ繧ｿ繝・け繝医Ξ繝ｼ繧ｹ
 
-- Bearerトークン、ペアリングコード
-- 完全なNFC UID／認証キー
-- 個人名と認証キーの対応
-- スタックトレース
+## 15. 繧ｻ繧ｭ繝･繝ｪ繝・ぅ繝ｻ繝励Λ繧､繝舌す繝ｼ
 
-## 15. セキュリティ・プライバシー
-
-- releaseはHTTPSのみ。cleartext許可はdebugの限定hostだけにする。
-- トークンはKeystore保護、バックアップ対象外、ログ・analytics・crash reportへ非送信。
-- pairing code、認証キー、AuthorizationをOkHttpログからredactする。
-- `android:allowBackup`またはdata extraction rulesで秘密・Roomを除外する。
-- releaseでdebuggableを無効化する。
-- 画面キャプチャ制限はPairing／Diagnosticsへ適用を検討する。
-- 端末紛失時は管理画面でdeviceを停止し、Sanctum tokenを失効できるようにする。
-- NFC UIDは複製可能であり、入退室等の高保証認証には利用しない。
-- 端末時刻改ざん対策として`punched_at`、offset、local created、sent、server received、
-  自動時刻設定状態（取得可能時）を診断可能にする。
-- 認証キーの保存期間と送信済み履歴の削除期間を運用ルールとして定める。
-
-## 16. ハートビート
-
-送信契機は起動、フォアグラウンド復帰（前回から一定時間超過時）、定期Worker、必要に応じ打刻成功後。
-端末側で最終送信時刻を持ち、短時間の多重送信を抑止する。現行APIへ送る本文は`app_version`だけとし、
-未送信件数、OSバージョン、端末時刻はAndroidの診断画面内だけで管理する。
-
-ハートビート失敗は打刻を妨げない。401だけは端末認証状態へ反映し、それ以外は次回へ持ち越す。
-
-## 17. テスト設計
-
+- release縺ｯHTTPS縺ｮ縺ｿ縲Ｄleartext險ｱ蜿ｯ縺ｯdebug縺ｮ髯仙ｮ喇ost縺縺代↓縺吶ｋ縲・- 繝医・繧ｯ繝ｳ縺ｯKeystore菫晁ｭｷ縲√ヰ繝・け繧｢繝・・蟇ｾ雎｡螟悶√Ο繧ｰ繝ｻanalytics繝ｻcrash report縺ｸ髱樣∽ｿ｡縲・- pairing code縲∬ｪ崎ｨｼ繧ｭ繝ｼ縲、uthorization繧丹kHttp繝ｭ繧ｰ縺九ｉredact縺吶ｋ縲・- `android:allowBackup`縺ｾ縺溘・data extraction rules縺ｧ遘伜ｯ・・Room繧帝勁螟悶☆繧九・- release縺ｧdebuggable繧堤┌蜉ｹ蛹悶☆繧九・- 逕ｻ髱｢繧ｭ繝｣繝励メ繝｣蛻ｶ髯舌・Pairing・愁iagnostics縺ｸ驕ｩ逕ｨ繧呈､懆ｨ弱☆繧九・- 遶ｯ譛ｫ邏帛､ｱ譎ゅ・邂｡逅・判髱｢縺ｧdevice繧貞●豁｢縺励ヾanctum token繧貞､ｱ蜉ｹ縺ｧ縺阪ｋ繧医≧縺ｫ縺吶ｋ縲・- NFC UID縺ｯ隍・｣ｽ蜿ｯ閭ｽ縺ｧ縺ゅｊ縲∝・騾螳､遲峨・鬮倅ｿ晁ｨｼ隱崎ｨｼ縺ｫ縺ｯ蛻ｩ逕ｨ縺励↑縺・・- 遶ｯ譛ｫ譎ょ綾謾ｹ縺悶ｓ蟇ｾ遲悶→縺励※`punched_at`縲｛ffset縲〕ocal created縲《ent縲《erver received縲・  閾ｪ蜍墓凾蛻ｻ險ｭ螳夂憾諷具ｼ亥叙蠕怜庄閭ｽ譎ゑｼ峨ｒ險ｺ譁ｭ蜿ｯ閭ｽ縺ｫ縺吶ｋ縲・- 隱崎ｨｼ繧ｭ繝ｼ縺ｮ菫晏ｭ俶悄髢薙→騾∽ｿ｡貂医∩螻･豁ｴ縺ｮ蜑企勁譛滄俣繧帝°逕ｨ繝ｫ繝ｼ繝ｫ縺ｨ縺励※螳壹ａ繧九・
+## 16. 繝上・繝医ン繝ｼ繝・
+騾∽ｿ｡螂第ｩ溘・襍ｷ蜍輔√ヵ繧ｩ繧｢繧ｰ繝ｩ繧ｦ繝ｳ繝牙ｾｩ蟶ｰ・亥燕蝗槭°繧我ｸ螳壽凾髢楢ｶ・℃譎ゑｼ峨∝ｮ壽悄Worker縲∝ｿ・ｦ√↓蠢懊§謇灘綾謌仙粥蠕後・遶ｯ譛ｫ蛛ｴ縺ｧ譛邨る∽ｿ｡譎ょ綾繧呈戟縺｡縲∫洒譎る俣縺ｮ螟夐㍾騾∽ｿ｡繧呈椛豁｢縺吶ｋ縲ら樟陦窟PI縺ｸ騾√ｋ譛ｬ譁・・`app_version`縺縺代→縺励・譛ｪ騾∽ｿ｡莉ｶ謨ｰ縲＾S繝舌・繧ｸ繝ｧ繝ｳ縲∫ｫｯ譛ｫ譎ょ綾縺ｯAndroid縺ｮ險ｺ譁ｭ逕ｻ髱｢蜀・□縺代〒邂｡逅・☆繧九・
+繝上・繝医ン繝ｼ繝亥､ｱ謨励・謇灘綾繧貞ｦｨ縺偵↑縺・・01縺縺代・遶ｯ譛ｫ隱崎ｨｼ迥ｶ諷九∈蜿肴丐縺励√◎繧御ｻ･螟悶・谺｡蝗槭∈謖√■雜翫☆縲・
+## 17. 繝・せ繝郁ｨｭ險・
 ### 17.1 Unit
 
-- NFC UIDの符号拡張を含む大文字16進正規化
-- 空UID、同一UIDの3秒デバウンス
-- 4種のAPI値変換
-- offset付き時刻の保持（端末timezoneへの再変換をしない）
-- idempotency keyが再送で変化しない
-- work_date resolverの優先順位
-- HTTP statusと安全な既知messageから`AppError`・配送状態への分類
-- トークンや認証キーのログサニタイズ
+- NFC UID縺ｮ隨ｦ蜿ｷ諡｡蠑ｵ繧貞性繧螟ｧ譁・ｭ・6騾ｲ豁｣隕丞喧
+- 遨ｺUID縲∝酔荳UID縺ｮ3遘偵ョ繝舌え繝ｳ繧ｹ
+- 4遞ｮ縺ｮAPI蛟､螟画鋤
+- offset莉倥″譎ょ綾縺ｮ菫晄戟・育ｫｯ譛ｫtimezone縺ｸ縺ｮ蜀榊､画鋤繧偵＠縺ｪ縺・ｼ・- idempotency key縺悟・騾√〒螟牙喧縺励↑縺・- work_date resolver縺ｮ蜆ｪ蜈磯・ｽ・- HTTP status縺ｨ螳牙・縺ｪ譌｢遏･message縺九ｉ`AppError`繝ｻ驟埼∫憾諷九∈縺ｮ蛻・｡・- 繝医・繧ｯ繝ｳ繧・ｪ崎ｨｼ繧ｭ繝ｼ縺ｮ繝ｭ繧ｰ繧ｵ繝九ち繧､繧ｺ
 
 ### 17.2 Room
 
-- idempotency unique制約
-- insert後にpendingとなる
-- 最古順の排他取得
-- sendingのstale recovery
-- 成功／再試行／恒久失敗／認証待ち更新
-- アプリ再起動後もキューが残る
-- sent後に認証キーが消去される
-
+- idempotency unique蛻ｶ邏・- insert蠕後↓pending縺ｨ縺ｪ繧・- 譛蜿､鬆・・謗剃ｻ門叙蠕・- sending縺ｮstale recovery
+- 謌仙粥・丞・隧ｦ陦鯉ｼ乗￡荵・､ｱ謨暦ｼ剰ｪ崎ｨｼ蠕・■譖ｴ譁ｰ
+- 繧｢繝励Μ蜀崎ｵｷ蜍募ｾ後ｂ繧ｭ繝･繝ｼ縺梧ｮ九ｋ
+- sent蠕後↓隱崎ｨｼ繧ｭ繝ｼ縺梧ｶ亥悉縺輔ｌ繧・
 ### 17.3 Repository / MockWebServer
 
-- URL、method、JSON、Accept、Content-Type
-- 端末APIだけBearerが付く
-- pairing exchangeにはBearerが付かない
-- Authorization、認証キーがテストlogger出力にも現れない
-- 現行成功200、同一冪等キー200、401、403、422、429、5xx、不正JSON、timeout
-- Retry-After解釈
-
+- URL縲［ethod縲゛SON縲、ccept縲，ontent-Type
+- 遶ｯ譛ｫAPI縺縺腺earer縺御ｻ倥￥
+- pairing exchange縺ｫ縺ｯBearer縺御ｻ倥°縺ｪ縺・- Authorization縲∬ｪ崎ｨｼ繧ｭ繝ｼ縺後ユ繧ｹ繝・ogger蜃ｺ蜉帙↓繧ら樟繧後↑縺・- 迴ｾ陦梧・蜉・00縲∝酔荳蜀ｪ遲峨く繝ｼ200縲・01縲・03縲・22縲・29縲・xx縲∽ｸ肴ｭ｣JSON縲》imeout
+- Retry-After隗｣驥・
 ### 17.4 Worker
 
-- CONNECTED制約
-- 1件ずつ時系列送信
-- 401で後続停止
-- retryableだけ再試行
-- Unique Workで多重実行しない
+- CONNECTED蛻ｶ邏・- 1莉ｶ縺壹▽譎らｳｻ蛻鈴∽ｿ｡
+- 401縺ｧ蠕檎ｶ壼●豁｢
+- retryable縺縺大・隧ｦ陦・- Unique Work縺ｧ螟夐㍾螳溯｡後＠縺ｪ縺・
+### 17.5 Compose UI / 險域ｸｬ繝・せ繝・
+- 譛ｪ繝壹い繝ｪ繝ｳ繧ｰ譎ゅ・蛻晄悄逕ｻ髱｢
+- 謌仙粥蠕後・PunchScreen驕ｷ遘ｻ
+- 4遞ｮ驕ｸ謚槭→驕ｸ謚櫁｡ｨ遉ｺ
+- 繧ｪ繝輔Λ繧､繝ｳ陦ｨ遉ｺ繝ｻ譛ｪ騾∽ｿ｡莉ｶ謨ｰ
+- 謌仙粥・上お繝ｩ繝ｼ・・01譯亥・
+- 譛ｪ騾∽ｿ｡縺ゅｊ縺ｮ繝壹い繝ｪ繝ｳ繧ｰ隗｣髯､遖∵ｭ｢
+- NFC辟｡蜉ｹ繝ｻ髱槫ｯｾ蠢懆｡ｨ遉ｺ
 
-### 17.5 Compose UI / 計測テスト
+### 17.6 繝舌ャ繧ｯ繧ｨ繝ｳ繝宇eature Test・育樟陦檎｢ｺ隱搾ｼ玖ｿｽ蜉謗ｨ螂ｨ・・
+- 繧ｳ繝ｼ繝峨・譛滄剞縲∬ｪ､繧ｳ繝ｼ繝峨∽ｺ､謠帶・蜉滂ｼ亥ｮ溯｣・ｸ医∩・峨ょ腰蝗槫茜逕ｨ縺ｮ荳ｦ陦瑚ｩｦ鬨薙→rate limit縺ｯ霑ｽ蜉謗ｨ螂ｨ
+- Device token縺ｮability縺ｨstatus
+- 繝ｦ繝ｼ繧ｶ繝ｼ繝医・繧ｯ繝ｳ縺ｧ遶ｯ譛ｫAPI繧貞他縺ｹ縺ｪ縺・％縺ｨ
+- 隱崎ｨｼ繧ｭ繝ｼ隗｣豎ｺ縲∫┌蜉ｹ繧ｭ繝ｼ縲・㍾隍・く繝ｼ縺ｮ諡貞凄
+- 蜷御ｸ蜀ｪ遲峨く繝ｼ縺ｮ騾先ｬ｡蜀埼・ｼ亥ｮ溯｣・ｸ医∩・・- 蜷御ｸ蜀ｪ遲峨く繝ｼ縺ｮ荳ｦ陦檎ｫｶ蜷医∝挨payload・丞挨device蜀榊茜逕ｨ縺ｮ諡貞凄・郁ｿｽ蜉謗ｨ螂ｨ・・- offset菫晏ｭ倥→譌｢蟄俶遠蛻ｻ蜷梧悄
+- 蜈ｨ迥ｶ諷句､画峩縺ｧ謇螳壹・stored event縺瑚ｨ倬鹸縺輔ｌ繧九％縺ｨ
 
-- 未ペアリング時の初期画面
-- 成功後のPunchScreen遷移
-- 4種選択と選択表示
-- オフライン表示・未送信件数
-- 成功／エラー／401案内
-- 未送信ありのペアリング解除禁止
-- NFC無効・非対応表示
+## 18. 螳溯｣・ヵ繧ｧ繝ｼ繧ｺ
 
-### 17.6 バックエンドFeature Test（現行確認＋追加推奨）
-
-- コードの期限、誤コード、交換成功（実装済み）。単回利用の並行試験とrate limitは追加推奨
-- Device tokenのabilityとstatus
-- ユーザートークンで端末APIを呼べないこと
-- 認証キー解決、無効キー、重複キーの拒否
-- 同一冪等キーの逐次再送（実装済み）
-- 同一冪等キーの並行競合、別payload／別device再利用の拒否（追加推奨）
-- offset保存と既存打刻同期
-- 全状態変更で所定のstored eventが記録されること
-
-## 18. 実装フェーズ
-
-| Phase | Android | バックエンド依存／完了条件 |
+| Phase | Android | 繝舌ャ繧ｯ繧ｨ繝ｳ繝我ｾ晏ｭ假ｼ丞ｮ御ｺ・擅莉ｶ |
 |---|---|---|
-| 0 契約確認 | 現行DTO固定、MockWebServer fixture作成 | 参照ブランチのFeature Testを確認 |
-| 1 基盤 | Compose、Hilt、Room、Retrofit、Build Variant | mock APIで起動・CI成功 |
-| 2 ペアリング | 画面、安全保存、状態遷移 | 実装済みexchange APIと接続 |
-| 3 打刻 | NFC、4種選択、事前保存、即時送信 | 実装済みdevice punch APIと接続 |
-| 4 オフライン | Worker、状態分類、再送、冪等 | 現行の同一キー再送仕様と接続 |
-| 5 運用 | heartbeat、診断、解除、保持期間 | heartbeatは実装済み。端末側解除方針を確定 |
-| 6 個人端末 | ownership分岐 | `POST /users/me/devices`は実装済みだが共有端末完成後 |
+| 0 螂醍ｴ・｢ｺ隱・| 迴ｾ陦轡TO蝗ｺ螳壹｀ockWebServer fixture菴懈・ | 蜿ら・繝悶Λ繝ｳ繝√・Feature Test繧堤｢ｺ隱・|
+| 1 蝓ｺ逶､ | Compose縲？ilt縲ヽoom縲ヽetrofit縲。uild Variant | mock API縺ｧ襍ｷ蜍輔・CI謌仙粥 |
+| 2 繝壹い繝ｪ繝ｳ繧ｰ | 逕ｻ髱｢縲∝ｮ牙・菫晏ｭ倥∫憾諷矩・遘ｻ | 螳溯｣・ｸ医∩exchange API縺ｨ謗･邯・|
+| 3 謇灘綾 | NFC縲・遞ｮ驕ｸ謚槭∽ｺ句燕菫晏ｭ倥∝叉譎る∽ｿ｡ | 螳溯｣・ｸ医∩device punch API縺ｨ謗･邯・|
+| 4 繧ｪ繝輔Λ繧､繝ｳ | Worker縲∫憾諷句・鬘槭∝・騾√∝・遲・| 迴ｾ陦後・蜷御ｸ繧ｭ繝ｼ蜀埼∽ｻ墓ｧ倥→謗･邯・|
+| 5 驕狗畑 | heartbeat縲∬ｨｺ譁ｭ縲∬ｧ｣髯､縲∽ｿ晄戟譛滄俣 | heartbeat縺ｯ螳溯｣・ｸ医∩縲らｫｯ譛ｫ蛛ｴ隗｣髯､譁ｹ驥昴ｒ遒ｺ螳・|
+| 6 蛟倶ｺｺ遶ｯ譛ｫ | ownership蛻・ｲ・| `POST /users/me/devices`縺ｯ螳溯｣・ｸ医∩縺縺悟・譛臥ｫｯ譛ｫ螳梧・蠕・|
 
-各Phaseでunit test、該当instrumentation test、README更新を同時に行う。
+蜷Пhase縺ｧunit test縲∬ｩｲ蠖妬nstrumentation test縲ヽEADME譖ｴ譁ｰ繧貞酔譎ゅ↓陦後≧縲・
+## 19. 遒ｺ螳壻ｺ矩・・谿玖ｪｲ鬘後・繝舌ャ繧ｯ繧ｨ繝ｳ繝画隼蝟・呵｣・
+### 19.1 螳溯｣・捩謇九↓蠢・ｦ√↑螂醍ｴ・・遒ｺ螳壽ｸ医∩
 
-## 19. 確定事項・残課題・バックエンド改善候補
+- Device ID縺ｯ謨ｴ謨ｰ縲∝・譛頴wnership縺ｯ`organization_shared`縲・- 繝壹い繝ｪ繝ｳ繧ｰ莠､謠帙・`device_id`縺ｨ8譁・ｭ励さ繝ｼ繝峨ｒ騾√ｊ縲～device`縺ｨ`token`繧貞女縺大叙繧九・- 蜈ｱ譛臥ｫｯ譛ｫtoken縺ｯ`Device`繧剃ｸｻ菴薙→縺吶ｋSanctum token縺ｧability縺ｯ`recorder:punch`縲・- 隱崎ｨｼ繧ｭ繝ｼ縺ｯ繧ｵ繝ｼ繝舌・縺粂MAC辣ｧ蜷医＠縲∝・譛臥ｫｯ譛ｫ謇灘綾縺ｧ縺ｯ蠢・医・- 遶ｯ譛ｫ謇灘綾縺ｯ迴ｾ陦形AttendancePunchResource`繧・00縺ｧ霑斐☆縲・- heartbeat縺ｯ`app_version`縺縺代ｒ蜿励￠莉倥￠縲～DeviceResource`繧定ｿ斐☆縲・
+### 19.2 Android蛻晄悄迚医〒豎ｺ繧√ｋ莠矩・
+1. 騾∽ｿ｡貂医∩陦後∵￡荵・､ｱ謨苓｡後∬ｪ崎ｨｼ繧ｭ繝ｼ蛟､縺ｮ菫晄戟譛滄俣
+2. 繧ｵ繝ｼ繝舌・蛛ｴrevoke API繧堤ｫｯ譛ｫ閾ｪ霄ｫ縺九ｉ蜻ｼ縺ｹ縺ｪ縺・樟迥ｶ縺ｧ縺ｮ縲後・繧｢繝ｪ繝ｳ繧ｰ隗｣髯､縲阪・驕狗畑
+3. 遶ｯ譛ｫ譎ょ綾縺壹ｌ縺ｮ隴ｦ蜻企明蛟､
+4. 豌丞錐陦ｨ遉ｺ縺ｮ縺溘ａ縺ｫ謇灘綾蜑荒esolve繧貞ｸｸ逕ｨ縺吶ｋ縺具ｼ磯壻ｿ｡縺・蝗槭↓縺ｪ繧九◆繧∵里螳壹・菴ｿ逕ｨ縺励↑縺・ｼ・5. 譛ｬ逡ｪAPI URL縲［inSdk縲》argetSdk縲∝ｯｾ蠢懃ｫｯ譛ｫ縺ｮNFC隕∽ｻｶ
 
-### 19.1 実装着手に必要な契約は確定済み
+### 19.3 繝舌ャ繧ｯ繧ｨ繝ｳ繝画隼蝟・呵｣懶ｼ・ndroid螳溯｣・・蠕・◆縺ｪ縺・ｼ・
+1. `idempotency_key`繧蛋(device_id, idempotency_key)`縺ｧscope縺励〉equest payload hash繧堤・蜷医☆繧九・2. 蜷御ｸ蜀ｪ遲峨く繝ｼ縺ｮ荳ｦ陦碁∽ｿ｡繧奪B荳諢城＆蜿阪〒縺ｯ縺ｪ縺乗里蟄倡ｵ先棡縺ｨ縺励※螳牙・縺ｫ謇ｱ縺・・3. 蛻･payload縺ｧ蜷後§繧ｭ繝ｼ繧剃ｽｿ縺｣縺溷ｴ蜷医・409遲峨〒諡貞凄縺励∵里蟄俶遠蛻ｻ繧呈・蜉滓桶縺・〒霑斐＆縺ｪ縺・・4. 繝壹い繝ｪ繝ｳ繧ｰ莠､謠帙ｒ繝医Λ繝ｳ繧ｶ繧ｯ繧ｷ繝ｧ繝ｳ・剰｡後Ο繝・け縺ｧ蜊伜屓蛹悶＠縲！P繝ｻdevice蜊倅ｽ阪・rate limit繧剃ｻ倥￠繧九・5. `error_code`縺ｨ`request_id`繧貞・騾壹お繝ｩ繝ｼ螂醍ｴ・∈霑ｽ蜉縺吶ｋ縲・6. 謌仙粥繝ｬ繧ｹ繝昴Φ繧ｹ縺ｸ遉ｾ蜩｡陦ｨ遉ｺ蜷阪～idempotency_key`縲√し繝ｼ繝舌・蜿嶺ｿ｡譎ょ綾繧定ｿｽ蜉縺吶ｋ縲・7. `work_date`縺ｮ譌･霍ｨ縺弱Ν繝ｼ繝ｫ縲∵悴譚･・城℃蜴ｻ譎ょ綾縲√が繝輔Λ繧､繝ｳ險ｱ螳ｹ譛滄俣繧偵し繝ｼ繝舌・縺ｧ讀懆ｨｼ縺吶ｋ縲・8. `allowed_punch_types`縺ｨ`allow_offline`繧蛋DevicePunchController`縺ｧ蠑ｷ蛻ｶ縺吶ｋ縲・9. heartbeat縺ｸOS縲∵悴騾∽ｿ｡莉ｶ謨ｰ縲∫ｫｯ譛ｫ譎ょ綾繧定ｿｽ蜉縺吶ｋ縺九∫樟陦後・邁｡譏謎ｻ墓ｧ倥ｒ豁｣蠑丞喧縺吶ｋ縲・10. NFC UID縺ｮ豁｣隕丞喧繧偵く繝ｼ遞ｮ蛻･縺斐→縺ｫ邨ｱ荳縺吶ｋ縲ら樟陦後し繝ｼ繝舌・縺ｯtrim・句､ｧ譁・ｭ怜喧縺ｮ縺ｿ縺ｪ縺ｮ縺ｧ縲∫匳骭ｲ蛟､繧・    Android縺ｨ蜷後§縲悟玄蛻・ｊ縺ｪ縺怜､ｧ譁・ｭ・6騾ｲ縲阪↓謠・∴縺ｪ縺・→辣ｧ蜷医〒縺阪↑縺・・
+### 19.4 蟆・擂
 
-- Device IDは整数、共有ownershipは`organization_shared`。
-- ペアリング交換は`device_id`と8文字コードを送り、`device`と`token`を受け取る。
-- 共有端末tokenは`Device`を主体とするSanctum tokenでabilityは`recorder:punch`。
-- 認証キーはサーバーがHMAC照合し、共有端末打刻では必須。
-- 端末打刻は現行`AttendancePunchResource`を200で返す。
-- heartbeatは`app_version`だけを受け付け、`DeviceResource`を返す。
+- QR蜈･蜉帙∵遠蛻ｻ遞ｮ蛻･縺ｮ閾ｪ蜍墓耳螳・- 蛟倶ｺｺ遶ｯ譛ｫ繝｢繝ｼ繝峨・UI縺ｨ繝ｦ繝ｼ繧ｶ繝ｼSSO騾｣謳ｺ
+- MDM縲√く繧ｪ繧ｹ繧ｯ繝｢繝ｼ繝峨∬ｨｼ譏取嶌pinning縺ｮ驕狗畑蜿ｯ蜷ｦ
 
-### 19.2 Android初期版で決める事項
+## 20. 蛻晄悄迚医・螳御ｺ・擅莉ｶ
 
-1. 送信済み行、恒久失敗行、認証キー値の保持期間
-2. サーバー側revoke APIを端末自身から呼べない現状での「ペアリング解除」の運用
-3. 端末時刻ずれの警告閾値
-4. 氏名表示のために打刻前resolveを常用するか（通信が2回になるため既定は使用しない）
-5. 本番API URL、minSdk、targetSdk、対応端末のNFC要件
-
-### 19.3 バックエンド改善候補（Android実装は待たない）
-
-1. `idempotency_key`を`(device_id, idempotency_key)`でscopeし、request payload hashを照合する。
-2. 同一冪等キーの並行送信をDB一意違反ではなく既存結果として安全に扱う。
-3. 別payloadで同じキーを使った場合は409等で拒否し、既存打刻を成功扱いで返さない。
-4. ペアリング交換をトランザクション／行ロックで単回化し、IP・device単位のrate limitを付ける。
-5. `error_code`と`request_id`を共通エラー契約へ追加する。
-6. 成功レスポンスへ社員表示名、`idempotency_key`、サーバー受信時刻を追加する。
-7. `work_date`の日跨ぎルール、未来／過去時刻、オフライン許容期間をサーバーで検証する。
-8. `allowed_punch_types`と`allow_offline`を`DevicePunchController`で強制する。
-9. heartbeatへOS、未送信件数、端末時刻を追加するか、現行の簡易仕様を正式化する。
-10. NFC UIDの正規化をキー種別ごとに統一する。現行サーバーはtrim＋大文字化のみなので、登録値も
-    Androidと同じ「区切りなし大文字16進」に揃えないと照合できない。
-
-### 19.4 将来
-
-- QR入力、打刻種別の自動推定
-- 個人端末モードのUIとユーザーSSO連携
-- MDM、キオスクモード、証明書pinningの運用可否
-
-## 20. 初期版の完了条件
-
-- 管理画面で登録済みの共有端末を、端末IDとコードでペアリングできる。
-- トークンを平文・ログ・リポジトリへ残さない。
-- NFC UIDを指定規則で読み、4種の打刻を選べる。
-- すべての打刻がAPI送信前にRoomへ保存される。
-- オフラインでも受付でき、通信復旧後に同じ冪等キーで自動再送される。
-- 同一打刻の再送でサーバーに二重登録されない。
-- 成功、端末保存、恒久失敗、認証失効を利用者が区別できる。
-- 401時も未送信打刻を失わず再ペアリングへ誘導できる。
-- heartbeatと非秘密の診断情報を提供できる。
-- Androidとバックエンドの契約テストが通る。
-- `flow-office`のEventStore、日時、打刻ログ／日次勤怠分離の原則を破らない。
+- 邂｡逅・判髱｢縺ｧ逋ｻ骭ｲ貂医∩縺ｮ蜈ｱ譛臥ｫｯ譛ｫ繧偵∫ｫｯ譛ｫID縺ｨ繧ｳ繝ｼ繝峨〒繝壹い繝ｪ繝ｳ繧ｰ縺ｧ縺阪ｋ縲・- 繝医・繧ｯ繝ｳ繧貞ｹｳ譁・・繝ｭ繧ｰ繝ｻ繝ｪ繝昴ず繝医Μ縺ｸ谿九＆縺ｪ縺・・- NFC UID繧呈欠螳夊ｦ丞援縺ｧ隱ｭ縺ｿ縲・遞ｮ縺ｮ謇灘綾繧帝∈縺ｹ繧九・- 縺吶∋縺ｦ縺ｮ謇灘綾縺窟PI騾∽ｿ｡蜑阪↓Room縺ｸ菫晏ｭ倥＆繧後ｋ縲・- 繧ｪ繝輔Λ繧､繝ｳ縺ｧ繧ょ女莉倥〒縺阪・壻ｿ｡蠕ｩ譌ｧ蠕後↓蜷後§蜀ｪ遲峨く繝ｼ縺ｧ閾ｪ蜍募・騾√＆繧後ｋ縲・- 蜷御ｸ謇灘綾縺ｮ蜀埼√〒繧ｵ繝ｼ繝舌・縺ｫ莠碁㍾逋ｻ骭ｲ縺輔ｌ縺ｪ縺・・- 謌仙粥縲∫ｫｯ譛ｫ菫晏ｭ倥∵￡荵・､ｱ謨励∬ｪ崎ｨｼ螟ｱ蜉ｹ繧貞茜逕ｨ閠・′蛹ｺ蛻･縺ｧ縺阪ｋ縲・- 401譎ゅｂ譛ｪ騾∽ｿ｡謇灘綾繧貞､ｱ繧上★蜀阪・繧｢繝ｪ繝ｳ繧ｰ縺ｸ隱伜ｰ弱〒縺阪ｋ縲・- heartbeat縺ｨ髱樒ｧ伜ｯ・・險ｺ譁ｭ諠・ｱ繧呈署萓帙〒縺阪ｋ縲・- Android縺ｨ繝舌ャ繧ｯ繧ｨ繝ｳ繝峨・螂醍ｴ・ユ繧ｹ繝医′騾壹ｋ縲・- `flow-office`縺ｮEventStore縲∵律譎ゅ∵遠蛻ｻ繝ｭ繧ｰ・乗律谺｡蜍､諤蛻・屬縺ｮ蜴溷援繧堤ｴ繧峨↑縺・・

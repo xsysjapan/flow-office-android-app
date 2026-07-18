@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">flow-office 打刻リーダー</string>
+    <string name="pairing_title">端末をペアリング</string>
+    <string name="pairing_description">管理画面で登録済みの共有端末と接続します。</string>
+    <string name="api_server_url">APIサーバーURL</string>
+    <string name="device_id">端末ID</string>
+    <string name="pairing_code">ペアリングコード</string>
+    <string name="pairing_code_support">管理画面で発行された8文字のコード</string>
+    <string name="pairing_action">ペアリング</string>
+    <string name="pairing_in_progress">接続しています</string>
+    <string name="pairing_admin_help">端末IDまたはコードが分からない場合は、管理者に確認してください。</string>
+    <string name="pairing_error_heading">ペアリングできませんでした</string>
+</resources>
