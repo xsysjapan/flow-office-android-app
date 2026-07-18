@@ -5,8 +5,10 @@ import java.util.UUID
 import jp.co.xsys.flowoffice.data.remote.PunchApiClient
 import jp.co.xsys.flowoffice.data.remote.PunchRequest
 import jp.co.xsys.flowoffice.data.security.DeviceActivationStore
+import jp.co.xsys.flowoffice.data.security.DeviceCapabilitiesParser
 import jp.co.xsys.flowoffice.domain.error.AppError
 import jp.co.xsys.flowoffice.domain.punch.PunchType
+import jp.co.xsys.flowoffice.domain.punch.PunchTimestampFormatter
 
 class PunchRepository(
     private val apiClient: PunchApiClient,
@@ -18,6 +20,7 @@ class PunchRepository(
     ) {
         val activation = activationStore.readActivation()
             ?: throw PunchRepositoryException(AppError.ActivationMissing)
+        val timestamp = PunchTimestampFormatter.format(OffsetDateTime.now())
 
         apiClient.sendPunch(
             PunchRequest(
@@ -25,7 +28,8 @@ class PunchRepository(
                 token = activation.token,
                 appInstanceId = activation.appInstanceId,
                 punchType = punchType,
-                punchedAt = OffsetDateTime.now().toString(),
+                workDate = timestamp.workDate,
+                punchedAt = timestamp.punchedAt,
                 authenticationKeyValue = authenticationKeyValue,
                 idempotencyKey = UUID.randomUUID().toString(),
             ),
@@ -37,6 +41,7 @@ class PunchRepository(
         return DeviceSummary(
             deviceId = activation.deviceId,
             appInstanceId = activation.appInstanceId,
+            canPunch = DeviceCapabilitiesParser.parse(activation.deviceJson).canPunch,
         )
     }
 }
@@ -44,6 +49,7 @@ class PunchRepository(
 data class DeviceSummary(
     val deviceId: Long,
     val appInstanceId: String,
+    val canPunch: Boolean,
 )
 
 class PunchRepositoryException(

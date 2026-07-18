@@ -42,6 +42,7 @@ class DeviceActivationStore(context: Context) {
             apiBaseUrl = apiBaseUrl,
             deviceId = deviceId,
             appInstanceId = getOrCreateAppInstanceId(),
+            deviceJson = preferences.getString(KEY_DEVICE_JSON, null),
             token = decryptToken(
                 EncryptedToken(
                     ciphertext = ciphertext,
@@ -142,5 +143,6 @@ data class StoredDeviceActivation(
     val apiBaseUrl: String,
     val deviceId: Long,
     val appInstanceId: String,
+    val deviceJson: String?,
     val token: String,
 )

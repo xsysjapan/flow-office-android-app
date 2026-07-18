@@ -15,6 +15,7 @@ import jp.co.xsys.flowoffice.data.security.DeviceActivationStore
 import jp.co.xsys.flowoffice.domain.error.AppError
 import jp.co.xsys.flowoffice.domain.identity.NfcUidNormalizer
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -29,26 +30,77 @@ class DeviceAdminViewModel(application: Application) : AndroidViewModel(applicat
     )
     private val _uiState = MutableStateFlow(DeviceAdminUiState())
     val uiState: StateFlow<DeviceAdminUiState> = _uiState.asStateFlow()
+    private var availabilityJob: Job? = null
+
+    init {
+        refreshAvailability()
+    }
+
+    fun refreshAvailability() {
+        availabilityJob?.cancel()
+        _uiState.update {
+            it.copy(availability = DeviceAdminAvailability.CHECKING)
+        }
+        availabilityJob = viewModelScope.launch {
+            val result = runCatching {
+                withContext(Dispatchers.IO) { repository.getBootstrap() }
+            }
+            result.onSuccess { bootstrap ->
+                _uiState.update {
+                    it.copy(
+                        availability = DeviceAdminAvailability.AVAILABLE,
+                        bootstrap = bootstrap,
+                    )
+                }
+            }.onFailure {
+                _uiState.update {
+                    it.copy(
+                        availability = DeviceAdminAvailability.UNAVAILABLE,
+                        bootstrap = null,
+                        visible = false,
+                    )
+                }
+            }
+        }
+    }
 
     fun open() {
-        _uiState.value = DeviceAdminUiState(visible = true, busy = true)
+        val current = _uiState.value
+        if (current.availability != DeviceAdminAvailability.AVAILABLE) return
+        _uiState.value = DeviceAdminUiState(
+            visible = true,
+            availability = current.availability,
+            bootstrap = current.bootstrap,
+            busy = true,
+        )
         launchRequest(
             block = repository::getBootstrap,
             success = { bootstrap ->
                 _uiState.update { it.copy(bootstrap = bootstrap, busy = false) }
+            },
+            failure = { throwable ->
+                if (throwable is DeviceAdminApiException && throwable.statusCode == 403) {
+                    _uiState.value = DeviceAdminUiState(
+                        availability = DeviceAdminAvailability.UNAVAILABLE,
+                    )
+                } else {
+                    _uiState.update {
+                        it.copy(busy = false, errorResId = throwable.toStringResId())
+                    }
+                }
             },
         )
     }
 
     fun close() {
         if (_uiState.value.sessionAdminName.isBlank()) {
-            _uiState.value = DeviceAdminUiState()
+            _uiState.value = hiddenState()
             return
         }
         _uiState.update { it.copy(busy = true, errorResId = null) }
         viewModelScope.launch {
             runCatching { withContext(Dispatchers.IO) { repository.endSession() } }
-            _uiState.value = DeviceAdminUiState()
+            _uiState.value = hiddenState()
         }
     }
 
@@ -198,15 +250,31 @@ class DeviceAdminViewModel(application: Application) : AndroidViewModel(applicat
         )
     }
 
-    private fun <T> launchRequest(block: () -> T, success: (T) -> Unit) {
+    private fun <T> launchRequest(
+        block: () -> T,
+        success: (T) -> Unit,
+        failure: ((Throwable) -> Unit)? = null,
+    ) {
         viewModelScope.launch {
             val result = runCatching { withContext(Dispatchers.IO) { block() } }
             result.onSuccess(success).onFailure { throwable ->
-                _uiState.update {
-                    it.copy(busy = false, errorResId = throwable.toStringResId())
+                if (failure != null) {
+                    failure(throwable)
+                } else {
+                    _uiState.update {
+                        it.copy(busy = false, errorResId = throwable.toStringResId())
+                    }
                 }
             }
         }
+    }
+
+    private fun hiddenState(): DeviceAdminUiState {
+        val current = _uiState.value
+        return DeviceAdminUiState(
+            availability = current.availability,
+            bootstrap = current.bootstrap,
+        )
     }
 
     private fun Throwable.toStringResId(): Int {

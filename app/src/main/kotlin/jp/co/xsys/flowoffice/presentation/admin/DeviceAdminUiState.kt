@@ -17,9 +17,16 @@ enum class DeviceAdminPhase {
     REGISTERED,
 }
 
+enum class DeviceAdminAvailability {
+    CHECKING,
+    AVAILABLE,
+    UNAVAILABLE,
+}
+
 @Immutable
 data class DeviceAdminUiState(
     val visible: Boolean = false,
+    val availability: DeviceAdminAvailability = DeviceAdminAvailability.CHECKING,
     val phase: DeviceAdminPhase = DeviceAdminPhase.ENTRY,
     val bootstrap: AdminBootstrap? = null,
     val selectedBootstrapAdmin: AdminUser? = null,
@@ -31,4 +38,7 @@ data class DeviceAdminUiState(
     val authenticationKeys: List<AuthenticationKeySummary> = emptyList(),
     val busy: Boolean = false,
     @param:StringRes val errorResId: Int? = null,
-)
+) {
+    val canOpen: Boolean
+        get() = availability == DeviceAdminAvailability.AVAILABLE && !visible
+}

@@ -31,6 +31,7 @@
     <string name="error_pairing_unknown">アクティベーションに失敗しました。時間を置いて再試行してください。</string>
     <string name="punch_title">打刻</string>
     <string name="punch_description">打刻種別を選び、社員証をかざしてください。</string>
+    <string name="punch_unavailable_description">この端末には打刻権限がありません。管理者機能が有効な場合はNFCカード登録のみ利用できます。</string>
     <string name="punch_clock_in">出勤</string>
     <string name="punch_clock_out">退勤</string>
     <string name="punch_break_start">休憩開始</string>

@@ -34,12 +34,14 @@ class PunchViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun selectType(type: PunchType) {
+        if (!_uiState.value.canPunch) return
         _uiState.update {
             it.copy(selectedType = type, operation = PunchOperationState.WaitingForNfc)
         }
     }
 
     fun onNfcTagDiscovered(tagId: ByteArray?) {
+        if (!_uiState.value.canPunch) return
         val normalizedUid = tagId?.let(NfcUidNormalizer::normalize).orEmpty()
         if (normalizedUid.isBlank()) {
             _uiState.update {
@@ -80,6 +82,7 @@ class PunchViewModel(application: Application) : AndroidViewModel(application) {
             it.copy(
                 deviceId = summary?.deviceId,
                 appInstanceId = summary?.appInstanceId.orEmpty(),
+                canPunch = summary?.canPunch == true,
             )
         }
     }

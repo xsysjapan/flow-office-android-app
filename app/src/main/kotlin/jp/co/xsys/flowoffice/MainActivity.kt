@@ -64,6 +64,7 @@ class MainActivity : ComponentActivity() {
                     LaunchedEffect(pairingState.submission) {
                         if (pairingState.submission is PairingSubmissionState.Success) {
                             punchViewModel.refreshDeviceSummary()
+                            adminViewModel.refreshAvailability()
                             showPunch = true
                         }
                     }
@@ -117,6 +118,7 @@ class MainActivity : ComponentActivity() {
                             state = punchState,
                             onSelectType = punchViewModel::selectType,
                             onOpenDeviceAdmin = adminViewModel::open,
+                            showDeviceAdminAction = adminState.canOpen,
                         )
                     } else {
                         PairingScreen(

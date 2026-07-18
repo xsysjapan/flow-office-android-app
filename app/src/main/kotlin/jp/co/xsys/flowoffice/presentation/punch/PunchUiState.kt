@@ -11,6 +11,7 @@ data class PunchUiState(
     val pendingCount: Int = 0,
     val deviceId: Long? = null,
     val appInstanceId: String = "",
+    val canPunch: Boolean = false,
 ) {
     val appInstanceIdShort: String
         get() = appInstanceId.take(APP_INSTANCE_ID_VISIBLE_LENGTH)

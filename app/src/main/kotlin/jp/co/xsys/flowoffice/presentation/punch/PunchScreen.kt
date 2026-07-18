@@ -39,6 +39,7 @@ fun PunchScreen(
     state: PunchUiState,
     onSelectType: (PunchType) -> Unit,
     onOpenDeviceAdmin: () -> Unit,
+    showDeviceAdminAction: Boolean,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
@@ -64,23 +65,33 @@ fun PunchScreen(
                     modifier = Modifier.semantics { heading() },
                 )
                 Text(
-                    text = stringResource(R.string.punch_description),
+                    text = stringResource(
+                        if (state.canPunch) {
+                            R.string.punch_description
+                        } else {
+                            R.string.punch_unavailable_description
+                        },
+                    ),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 DeviceStatus(state = state)
-                HorizontalDivider()
-                PunchTypeGrid(
-                    selectedType = state.selectedType,
-                    onSelectType = onSelectType,
-                )
-                PunchOperationStatus(operation = state.operation)
-                HorizontalDivider()
-                OutlinedButton(
-                    onClick = onOpenDeviceAdmin,
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Text(stringResource(R.string.admin_open))
+                if (state.canPunch) {
+                    HorizontalDivider()
+                    PunchTypeGrid(
+                        selectedType = state.selectedType,
+                        onSelectType = onSelectType,
+                    )
+                    PunchOperationStatus(operation = state.operation)
+                }
+                if (showDeviceAdminAction) {
+                    HorizontalDivider()
+                    OutlinedButton(
+                        onClick = onOpenDeviceAdmin,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(stringResource(R.string.admin_open))
+                    }
                 }
             }
         }
@@ -237,9 +248,11 @@ private fun PunchScreenPhonePreview() {
             state = PunchUiState(
                 deviceId = 123,
                 appInstanceId = "12345678-1234-1234-1234-123456789012",
+                canPunch = true,
             ),
             onSelectType = {},
             onOpenDeviceAdmin = {},
+            showDeviceAdminAction = true,
         )
     }
 }

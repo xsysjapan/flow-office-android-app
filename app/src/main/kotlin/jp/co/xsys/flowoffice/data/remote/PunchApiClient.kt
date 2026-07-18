@@ -15,12 +15,7 @@ class PunchApiClient {
         val connection = endpoint.openConnection() as HttpURLConnection
 
         try {
-            val requestJson = JSONObject()
-                .put("punch_type", request.punchType.apiValue)
-                .put("punched_at", request.punchedAt)
-                .put("authentication_key_value", request.authenticationKeyValue)
-                .put("idempotency_key", request.idempotencyKey)
-                .toString()
+            val requestJson = request.toJsonString()
 
             connection.requestMethod = "POST"
             connection.connectTimeout = CONNECT_TIMEOUT_MILLIS
@@ -96,10 +91,20 @@ data class PunchRequest(
     val token: String,
     val appInstanceId: String,
     val punchType: PunchType,
+    val workDate: String,
     val punchedAt: String,
     val authenticationKeyValue: String,
     val idempotencyKey: String,
-)
+) {
+    fun toJsonString(): String = JSONObject()
+        .put("work_date", workDate)
+        .put("punch_type", punchType.apiValue)
+        .put("punched_at", punchedAt)
+        .put("authentication_key_value", authenticationKeyValue)
+        .put("offline", false)
+        .put("idempotency_key", idempotencyKey)
+        .toString()
+}
 
 class PunchApiException(
     val statusCode: Int?,
