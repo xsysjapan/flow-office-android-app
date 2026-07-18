@@ -6,6 +6,8 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.test.platform.app.InstrumentationRegistry
+import jp.co.xsys.flowoffice.R
 import jp.co.xsys.flowoffice.presentation.theme.FlowOfficeReaderTheme
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -64,7 +66,7 @@ class PairingScreenTest {
                 PairingScreen(
                     state = PairingUiState(
                         submission = PairingSubmissionState.Error(
-                            "管理者にコードの再発行を依頼してください。",
+                            R.string.error_pairing_unauthorized,
                         ),
                     ),
                     onApiBaseUrlChange = {},
@@ -76,8 +78,8 @@ class PairingScreenTest {
             }
         }
 
-        composeRule.onNodeWithText("アクティベーションできませんでした").assertExists()
-        composeRule.onNodeWithText("管理者にコードの再発行を依頼してください。").assertExists()
+        composeRule.onNodeWithText(stringResource(R.string.pairing_error_heading)).assertExists()
+        composeRule.onNodeWithText(stringResource(R.string.error_pairing_unauthorized)).assertExists()
     }
 
     @Test
@@ -97,6 +99,9 @@ class PairingScreenTest {
             }
         }
 
-        composeRule.onNodeWithText("アクティベーション済み").assertExists()
+        composeRule.onNodeWithText(stringResource(R.string.pairing_success_heading)).assertExists()
     }
+
+    private fun stringResource(resourceId: Int): String =
+        InstrumentationRegistry.getInstrumentation().targetContext.getString(resourceId)
 }

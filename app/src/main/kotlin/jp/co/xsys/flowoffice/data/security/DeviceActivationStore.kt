@@ -6,6 +6,7 @@ import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import android.util.Base64
 import java.security.KeyStore
+import java.util.UUID
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
@@ -20,6 +21,7 @@ class DeviceActivationStore(context: Context) {
     fun saveActivation(activation: DeviceActivation) {
         val encryptedToken = encryptToken(activation.token)
         preferences.edit()
+            .putString(KEY_APP_INSTANCE_ID, getOrCreateAppInstanceId())
             .putLong(KEY_DEVICE_ID, activation.deviceId)
             .putString(KEY_API_BASE_URL, activation.apiBaseUrl)
             .putString(KEY_DEVICE_JSON, activation.deviceJson)
@@ -27,6 +29,36 @@ class DeviceActivationStore(context: Context) {
             .putString(KEY_TOKEN_IV, encryptedToken.iv)
             .putLong(KEY_PAIRED_AT_MILLIS, System.currentTimeMillis())
             .apply()
+    }
+
+    fun readActivation(): StoredDeviceActivation? {
+        val apiBaseUrl = preferences.getString(KEY_API_BASE_URL, null) ?: return null
+        val ciphertext = preferences.getString(KEY_TOKEN_CIPHERTEXT, null) ?: return null
+        val iv = preferences.getString(KEY_TOKEN_IV, null) ?: return null
+        val deviceId = preferences.getLong(KEY_DEVICE_ID, MISSING_DEVICE_ID)
+        if (deviceId == MISSING_DEVICE_ID) return null
+
+        return StoredDeviceActivation(
+            apiBaseUrl = apiBaseUrl,
+            deviceId = deviceId,
+            appInstanceId = getOrCreateAppInstanceId(),
+            token = decryptToken(
+                EncryptedToken(
+                    ciphertext = ciphertext,
+                    iv = iv,
+                ),
+            ),
+        )
+    }
+
+    fun getOrCreateAppInstanceId(): String {
+        preferences.getString(KEY_APP_INSTANCE_ID, null)?.let { return it }
+
+        val appInstanceId = UUID.randomUUID().toString()
+        preferences.edit()
+            .putString(KEY_APP_INSTANCE_ID, appInstanceId)
+            .apply()
+        return appInstanceId
     }
 
     private fun encryptToken(token: String): EncryptedToken {
@@ -38,6 +70,19 @@ class DeviceActivationStore(context: Context) {
             ciphertext = Base64.encodeToString(ciphertext, Base64.NO_WRAP),
             iv = Base64.encodeToString(cipher.iv, Base64.NO_WRAP),
         )
+    }
+
+    private fun decryptToken(encryptedToken: EncryptedToken): String {
+        val cipher = Cipher.getInstance(TRANSFORMATION)
+        val iv = Base64.decode(encryptedToken.iv, Base64.NO_WRAP)
+        cipher.init(
+            Cipher.DECRYPT_MODE,
+            getOrCreateSecretKey(),
+            GCMParameterSpec(GCM_TAG_LENGTH_BITS, iv),
+        )
+
+        val ciphertext = Base64.decode(encryptedToken.ciphertext, Base64.NO_WRAP)
+        return cipher.doFinal(ciphertext).toString(Charsets.UTF_8)
     }
 
     private fun getOrCreateSecretKey(): SecretKey {
@@ -74,6 +119,9 @@ class DeviceActivationStore(context: Context) {
         const val KEY_ALIAS = "flow_office_reader_device_token"
         const val PREFERENCES_NAME = "device_activation"
         const val TRANSFORMATION = "AES/GCM/NoPadding"
+        const val GCM_TAG_LENGTH_BITS = 128
+        const val MISSING_DEVICE_ID = -1L
+        const val KEY_APP_INSTANCE_ID = "app_instance_id"
         const val KEY_API_BASE_URL = "api_base_url"
         const val KEY_DEVICE_ID = "device_id"
         const val KEY_DEVICE_JSON = "device_json"
@@ -88,4 +136,11 @@ data class DeviceActivation(
     val deviceId: Long,
     val token: String,
     val deviceJson: String?,
+)
+
+data class StoredDeviceActivation(
+    val apiBaseUrl: String,
+    val deviceId: Long,
+    val appInstanceId: String,
+    val token: String,
 )

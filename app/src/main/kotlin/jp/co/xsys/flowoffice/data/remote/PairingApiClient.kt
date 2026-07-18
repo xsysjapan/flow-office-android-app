@@ -4,6 +4,7 @@ import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.SocketTimeoutException
 import java.net.URL
+import jp.co.xsys.flowoffice.domain.error.AppError
 import org.json.JSONException
 import org.json.JSONObject
 
@@ -42,26 +43,26 @@ class PairingApiClient {
 
             throw PairingApiException(
                 statusCode = statusCode,
-                safeMessage = parseErrorMessage(statusCode, responseBody),
+                error = parseError(statusCode, responseBody),
             )
         } catch (exception: PairingApiException) {
             throw exception
         } catch (exception: SocketTimeoutException) {
             throw PairingApiException(
                 statusCode = null,
-                safeMessage = "接続がタイムアウトしました。ネットワークまたはAPIサーバーURLを確認してください。",
+                error = AppError.PairingTimeout,
                 cause = exception,
             )
         } catch (exception: IOException) {
             throw PairingApiException(
                 statusCode = null,
-                safeMessage = "APIサーバーに接続できませんでした。URLとネットワークを確認してください。",
+                error = AppError.PairingConnectionFailed,
                 cause = exception,
             )
         } catch (exception: JSONException) {
             throw PairingApiException(
                 statusCode = null,
-                safeMessage = "APIサーバーの応答を読み取れませんでした。サーバー設定を確認してください。",
+                error = AppError.PairingResponseInvalid,
                 cause = exception,
             )
         } finally {
@@ -94,7 +95,7 @@ class PairingApiClient {
         if (token.isBlank()) {
             throw PairingApiException(
                 statusCode = null,
-                safeMessage = "APIサーバーから端末トークンが返りませんでした。",
+                error = AppError.PairingTokenMissing,
             )
         }
 
@@ -104,20 +105,16 @@ class PairingApiClient {
         )
     }
 
-    private fun parseErrorMessage(statusCode: Int, responseBody: String): String {
-        val serverMessage = runCatching {
-            JSONObject(responseBody).optString("message").takeIf { it.isNotBlank() }
-        }.getOrNull()
-
+    private fun parseError(statusCode: Int, responseBody: String): AppError {
         return when (statusCode) {
-            400 -> "送信内容が正しくありません。端末IDとコードを確認してください。"
-            401 -> "アクティベーションコードが無効です。管理者に再発行を依頼してください。"
-            403 -> "この端末にはアクティベーション権限がありません。管理者に確認してください。"
-            404 -> "端末が見つかりません。端末IDを確認してください。"
-            422 -> serverMessage ?: "端末IDまたはコードが正しくありません。"
-            429 -> "試行回数が多すぎます。しばらく待ってから再試行してください。"
-            in 500..599 -> "APIサーバーでエラーが発生しました。時間を置いて再試行してください。"
-            else -> serverMessage ?: "アクティベーションに失敗しました。HTTP $statusCode"
+            400 -> AppError.PairingBadRequest
+            401 -> AppError.PairingUnauthorized
+            403 -> AppError.PairingForbidden
+            404 -> AppError.PairingNotFound
+            422 -> AppError.PairingValidationFailed
+            429 -> AppError.PairingRateLimited
+            in 500..599 -> AppError.PairingServerError
+            else -> AppError.PairingUnknown
         }
     }
 
@@ -134,6 +131,6 @@ data class PairingExchangeResponse(
 
 class PairingApiException(
     val statusCode: Int?,
-    val safeMessage: String,
+    val error: AppError,
     cause: Throwable? = null,
-) : Exception(safeMessage, cause)
+) : Exception(error.name, cause)

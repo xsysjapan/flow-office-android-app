@@ -1,5 +1,6 @@
 package jp.co.xsys.flowoffice.presentation.pairing
 
+import androidx.annotation.StringRes
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.listSaver
@@ -37,5 +38,5 @@ sealed interface PairingSubmissionState {
     data object Idle : PairingSubmissionState
     data object Submitting : PairingSubmissionState
     data object Success : PairingSubmissionState
-    data class Error(val message: String) : PairingSubmissionState
+    data class Error(@param:StringRes val messageResId: Int) : PairingSubmissionState
 }

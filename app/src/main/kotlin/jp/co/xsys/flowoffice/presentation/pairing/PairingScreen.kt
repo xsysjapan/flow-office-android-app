@@ -121,7 +121,7 @@ fun PairingScreen(
                 )
 
                 if (state.submission is PairingSubmissionState.Error) {
-                    PairingError(message = state.submission.message)
+                    PairingError(messageResId = state.submission.messageResId)
                 }
                 if (state.submission is PairingSubmissionState.Success) {
                     PairingSuccess()
@@ -162,7 +162,7 @@ fun PairingScreen(
 }
 
 @Composable
-private fun PairingError(message: String) {
+private fun PairingError(messageResId: Int) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -177,7 +177,7 @@ private fun PairingError(message: String) {
             color = MaterialTheme.colorScheme.error,
         )
         Text(
-            text = message,
+            text = stringResource(messageResId),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.error,
         )
@@ -225,7 +225,7 @@ private fun PairingScreenTabletDarkPreview() {
                 deviceId = "123",
                 pairingCode = "A1B2C3D4",
                 submission = PairingSubmissionState.Error(
-                    "コードの有効期限が切れています。管理者に再発行を依頼してください。",
+                    R.string.error_pairing_unauthorized,
                 ),
             ),
         )

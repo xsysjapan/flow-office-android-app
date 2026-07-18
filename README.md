@@ -11,6 +11,10 @@ Android向けのflow-office打刻リーダーアプリです。
 - アクティベーション失敗時の画面エラー表示
 - 成功時の端末トークン保存
 - Android Keystore AES-GCMによるトークン暗号化
+- 初回起動時に生成するアプリインスタンスID
+- NFC Reader ModeによるカードUID読み取り
+- 4種類の打刻種別選択
+- `POST /api/device-punches` による打刻送信
 - Debugビルドのみcleartext HTTPを許可
 - NFC UID正規化ロジックと単体テスト
 
@@ -38,10 +42,14 @@ debug APKは次に生成されます。
 app/build/outputs/apk/debug/app-debug.apk
 ```
 
+## 端末識別子
+
+AndroidのハードウェアID、IMEI、シリアル、MACアドレスは使用しません。Android Developersの識別子ベストプラクティスに従い、このアプリでは初回起動時にアプリ専用のUUIDを生成して内部ストレージに保存します。
+
+現行のflow-office APIは管理画面で発行した数値の端末IDを必要とするため、アクティベーション時の端末ID入力は残しています。アプリインスタンスIDは端末側の補助識別子として保存し、打刻API送信時に `X-Flow-Office-App-Instance-Id` ヘッダーで送信します。
+
 ## 次の実装候補
 
-- アクティベーション成功後の打刻画面への遷移
-- NFC Reader Mode
 - 打刻イベントのRoom保存
-- `POST /api/device-punches` 送信
 - WorkManagerによる未送信打刻の再送
+- バックエンド側でアプリインスタンスIDによる端末登録・再アクティベーションに対応
