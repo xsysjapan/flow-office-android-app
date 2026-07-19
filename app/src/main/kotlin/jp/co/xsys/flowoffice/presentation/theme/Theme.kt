@@ -17,6 +17,14 @@ private val LightColorScheme = lightColorScheme(
     surfaceVariant = ReaderSurfaceVariantLight,
     outline = ReaderOutlineLight,
     error = ReaderErrorLight,
+    secondary = ReaderSecondaryLight,
+    onSecondary = ReaderOnSecondaryLight,
+    secondaryContainer = ReaderSecondaryContainerLight,
+    onSecondaryContainer = ReaderOnSecondaryContainerLight,
+    tertiary = ReaderTertiaryLight,
+    onTertiary = ReaderOnTertiaryLight,
+    tertiaryContainer = ReaderTertiaryContainerLight,
+    onTertiaryContainer = ReaderOnTertiaryContainerLight,
 )
 
 private val DarkColorScheme = darkColorScheme(
@@ -30,6 +38,14 @@ private val DarkColorScheme = darkColorScheme(
     surfaceVariant = ReaderSurfaceVariantDark,
     outline = ReaderOutlineDark,
     error = ReaderErrorDark,
+    secondary = ReaderSecondaryDark,
+    onSecondary = ReaderOnSecondaryDark,
+    secondaryContainer = ReaderSecondaryContainerDark,
+    onSecondaryContainer = ReaderOnSecondaryContainerDark,
+    tertiary = ReaderTertiaryDark,
+    onTertiary = ReaderOnTertiaryDark,
+    tertiaryContainer = ReaderTertiaryContainerDark,
+    onTertiaryContainer = ReaderOnTertiaryContainerDark,
 )
 
 @Composable

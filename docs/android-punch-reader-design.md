@@ -62,12 +62,12 @@ Androidは「指示書の想定JSON」ではなく、次の現行差分に合わ
 | ペアリング成功トークン | `access_token` | `token` |
 | 端末所有区分 | `shared` | `organization_shared` |
 | 端末ID | 例では数値 | 数値で確定 |
-| 打刻成功 | 社員表示名を想定 | `AttendancePunchResource`。`user_id`のみで氏名なし |
+| 打刻成功 | 社員表示名を想定 | `AttendancePunchResource`に氏名と勤怠サマリーを付加 |
 | heartbeat本文 | OS、件数、端末時刻等 | `app_version`だけを受信 |
 | エラー分岐 | `error_code`を推奨 | 現状は主に422の`message` |
 | 冪等性 | 端末単位を想定 | `idempotency_key`単独の全体UNIQUE |
 
-最後の3点はAndroid実装を止めない。DTOを現行に合わせ、氏名はnullable、heartbeatは
+残りの差分はAndroid実装を止めない。DTOを現行に合わせ、氏名と勤怠サマリーはnullable、heartbeatは
 `app_version`だけを送り、エラーはHTTP statusを第一判定、既知messageを補助判定とする。
 安定した`error_code`等への改善提案は19節へ分離する。
 
@@ -480,12 +480,20 @@ Android DTOは`access_token`ではなく`token`を読む。交換時点で端末
   "offline": false,
   "note": null,
   "status": "active",
-  "created_at": "2026-07-19T09:00:13+09:00"
+  "created_at": "2026-07-19T09:00:13+09:00",
+  "user_name": "山田 太郎",
+  "attendance_summary": {
+    "work_minutes": null,
+    "missing_punch_count": 1,
+    "current_day_incomplete": false
+  }
 }
 ```
 
-レスポンスに社員名、`idempotency_key`、サーバー受信時刻、利用者向けmessageはない。したがって
-初期版の成功表示は打刻種別と時刻を主とし、社員名は事前resolveを有効にした場合だけ表示する。
+`user_name`は打刻した社員の表示名である。`attendance_summary.work_minutes`は退勤で日次勤怠が
+整合した場合のみ分数を返す。`missing_punch_count`は当日を除く過去31日間の未退勤件数、
+`current_day_incomplete`は退勤操作後も打刻列が整合しなかった場合の確認フラグである。Androidは
+これらを短時間の結果表示だけに使い、勤務時間を端末側で再計算しない。
 同一`idempotency_key`の再送は既存行を返し、新しい打刻を作らない。
 
 ### 11.4 ハートビート
@@ -595,6 +603,7 @@ API内部の例外文、スタックトレース、URL、トークンは利用�
 
 - 端末名、現在時刻、オンライン状態、未送信件数
 - 4種類の大きな打刻種別ボタン
+- 利用可能領域が横長（幅 > 高さ）の場合は、出勤・休憩開始・休憩終了・退勤の順で1行表示
 - 選択中種別と「社員証をかざしてください」
 - NFC無効・非対応の明確な案内
 - 成功、オフライン保存、未送信エラーを色・アイコン・文字・音・振動の複数手段で通知
@@ -738,7 +747,7 @@ API内部の例外文、スタックトレース、URL、トークンは利用�
 1. 送信済み行、未送信エラー行、認証キー値の保持期間
 2. サーバー側revoke APIを端末自身から呼べない現状での「ペアリング解除」の運用
 3. 端末時刻ずれの警告閾値
-4. 氏名表示のために打刻前resolveを常用するか(通信が2回になるため既定は使用しない)
+4. 打刻結果の氏名・勤怠サマリーを表示する時間(既定は3秒)
 5. 本番API URL、minSdk、targetSdk、対応端末のNFC要件
 
 ### 19.3 バックエンド改善提案(Android実装は待たない)
@@ -748,7 +757,7 @@ API内部の例外文、スタックトレース、URL、トークンは利用�
 3. 別payloadで同じキーを使った場合は409等で拒否し、既存打刻を成功扱いで返さない。
 4. ペアリング交換をトランザクション(行ロック)で冪等化し、IP・device単位のrate limitを付ける。
 5. `error_code`と`request_id`を共通エラー契約へ追加する。
-6. 成功レスポンスへ社員表示名、`idempotency_key`、サーバー受信時刻を追加する。
+6. 成功レスポンスへ未実装の`idempotency_key`、サーバー受信時刻を追加する。
 7. `work_date`の日跨ぎルール、未来・過去時刻、オフライン許容期間をサーバー側で検証する。
 8. `allowed_punch_types`と`allow_offline`を`DevicePunchController`で強制する。
 9. heartbeatへOS、未送信件数、端末時刻を追加するか、現行の簡易仕様を正式化する。

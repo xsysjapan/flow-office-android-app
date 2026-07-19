@@ -3,6 +3,7 @@ package jp.co.xsys.flowoffice.presentation.punch
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import jp.co.xsys.flowoffice.BuildConfig
 import jp.co.xsys.flowoffice.R
 import jp.co.xsys.flowoffice.data.remote.PunchApiClient
 import jp.co.xsys.flowoffice.data.remote.PunchApiException
@@ -13,10 +14,13 @@ import jp.co.xsys.flowoffice.domain.error.AppError
 import jp.co.xsys.flowoffice.domain.identity.NfcUidNormalizer
 import jp.co.xsys.flowoffice.domain.punch.PunchType
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -28,6 +32,7 @@ class PunchViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _uiState = MutableStateFlow(PunchUiState())
     val uiState: StateFlow<PunchUiState> = _uiState.asStateFlow()
+    private var heartbeatJob: Job? = null
 
     init {
         refreshDeviceSummary()
@@ -65,12 +70,34 @@ class PunchViewModel(application: Application) : AndroidViewModel(application) {
 
             _uiState.update {
                 if (result.isSuccess) {
-                    it.copy(operation = PunchOperationState.Success)
+                    val response = result.getOrThrow()
+                    it.copy(
+                        connection = ServerConnectionState.Connected,
+                        operation = PunchOperationState.Success(
+                            PunchResult(
+                                employeeName = response.employeeName,
+                                punchedAt = response.punchedAt,
+                                punchType = selectedType,
+                                workMinutes = response.workMinutes,
+                                missingPunchCount = response.missingPunchCount,
+                                currentDayIncomplete = response.currentDayIncomplete,
+                            ),
+                        ),
+                    )
                 } else {
+                    val failure = result.exceptionOrNull()
                     it.copy(
                         pendingCount = it.pendingCount + 1,
-                        operation = PunchOperationState.Error(result.exceptionOrNull().toStringResId()),
+                        connection = failure.toConnectionState(),
+                        operation = PunchOperationState.Error(failure.toStringResId()),
                     )
+                }
+            }
+            val success = _uiState.value.operation as? PunchOperationState.Success
+            if (success != null) {
+                delay(RESULT_VISIBLE_MILLIS)
+                _uiState.update {
+                    if (it.operation == success) it.copy(operation = PunchOperationState.WaitingForNfc) else it
                 }
             }
         }
@@ -85,6 +112,44 @@ class PunchViewModel(application: Application) : AndroidViewModel(application) {
                 canPunch = summary?.canPunch == true,
             )
         }
+        heartbeatJob?.cancel()
+        heartbeatJob = if (summary != null) {
+            viewModelScope.launch {
+                while (isActive) {
+                    refreshServerConnection()
+                    delay(HEARTBEAT_INTERVAL_MILLIS)
+                }
+            }
+        } else {
+            null
+        }
+    }
+
+    private suspend fun refreshServerConnection() {
+        _uiState.update { it.copy(connection = ServerConnectionState.Checking) }
+        val result = runCatching {
+            withContext(Dispatchers.IO) {
+                repository.checkServerConnection(BuildConfig.VERSION_NAME)
+            }
+        }
+        _uiState.update {
+            it.copy(
+                connection = if (result.isSuccess) {
+                    ServerConnectionState.Connected
+                } else {
+                    result.exceptionOrNull().toConnectionState()
+                },
+            )
+        }
+    }
+
+    private fun Throwable?.toConnectionState(): ServerConnectionState = when (this) {
+        is PunchApiException -> when {
+            statusCode == 401 -> ServerConnectionState.AuthenticationError
+            statusCode != null -> ServerConnectionState.Connected
+            else -> ServerConnectionState.Disconnected
+        }
+        else -> ServerConnectionState.Disconnected
     }
 
     private fun Throwable?.toStringResId(): Int = when (this) {
@@ -106,5 +171,10 @@ class PunchViewModel(application: Application) : AndroidViewModel(application) {
         AppError.PunchRateLimited -> R.string.error_punch_rate_limited
         AppError.PunchServerError -> R.string.error_punch_server_error
         else -> R.string.error_punch_unknown
+    }
+
+    private companion object {
+        const val RESULT_VISIBLE_MILLIS = 3_000L
+        const val HEARTBEAT_INTERVAL_MILLIS = 10 * 60 * 1_000L
     }
 }
