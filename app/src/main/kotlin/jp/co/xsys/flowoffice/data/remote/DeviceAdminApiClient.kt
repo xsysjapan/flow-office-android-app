@@ -62,7 +62,7 @@ class DeviceAdminApiClient {
         request,
         "POST",
         "/devices/me/admin/users/$userId/authentication-keys",
-        cardBody(rawKeyValue, "社員証NFC"),
+        cardBody(rawKeyValue, "NFCカード"),
     ) { AdminJsonParser.parseAuthenticationKeyResponse(it) }
 
     private fun cardBody(rawKeyValue: String, displayName: String) = JSONObject()
@@ -175,7 +175,7 @@ object AdminJsonParser {
 
     fun parseAuthenticationKey(json: JSONObject) = AuthenticationKeySummary(
         id = json.getLong("id"),
-        displayName = json.optString("display_name", "社員証NFC"),
+        displayName = json.optString("display_name", "NFCカード"),
         status = json.optString("status"),
     )
 

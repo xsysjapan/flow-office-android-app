@@ -29,6 +29,7 @@ data class DeviceAdminUiState(
     val availability: DeviceAdminAvailability = DeviceAdminAvailability.CHECKING,
     val phase: DeviceAdminPhase = DeviceAdminPhase.ENTRY,
     val bootstrap: AdminBootstrap? = null,
+    val bootstrapPending: Boolean = false,
     val selectedBootstrapAdmin: AdminUser? = null,
     val sessionAdminName: String = "",
     val expiresAt: String = "",
@@ -40,5 +41,5 @@ data class DeviceAdminUiState(
     @param:StringRes val errorResId: Int? = null,
 ) {
     val canOpen: Boolean
-        get() = availability == DeviceAdminAvailability.AVAILABLE && !visible
+        get() = availability == DeviceAdminAvailability.AVAILABLE && !visible && !bootstrapPending
 }

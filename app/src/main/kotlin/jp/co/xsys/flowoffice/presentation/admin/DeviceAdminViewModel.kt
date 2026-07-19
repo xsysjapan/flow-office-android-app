@@ -24,13 +24,15 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class DeviceAdminViewModel(application: Application) : AndroidViewModel(application) {
+    private val activationStore = DeviceActivationStore(application)
     private val repository = DeviceAdminRepository(
         DeviceAdminApiClient(),
-        DeviceActivationStore(application),
+        activationStore,
     )
     private val _uiState = MutableStateFlow(DeviceAdminUiState())
     val uiState: StateFlow<DeviceAdminUiState> = _uiState.asStateFlow()
     private var availabilityJob: Job? = null
+    private var requestJob: Job? = null
 
     init {
         refreshAvailability()
@@ -38,26 +40,46 @@ class DeviceAdminViewModel(application: Application) : AndroidViewModel(applicat
 
     fun refreshAvailability() {
         availabilityJob?.cancel()
+        val bootstrapPending = activationStore.isAdminBootstrapPending()
         _uiState.update {
-            it.copy(availability = DeviceAdminAvailability.CHECKING)
+            it.copy(
+                availability = DeviceAdminAvailability.CHECKING,
+                visible = bootstrapPending,
+                bootstrapPending = bootstrapPending,
+                phase = DeviceAdminPhase.ENTRY,
+                busy = bootstrapPending,
+            )
         }
         availabilityJob = viewModelScope.launch {
             val result = runCatching {
                 withContext(Dispatchers.IO) { repository.getBootstrap() }
             }
             result.onSuccess { bootstrap ->
-                _uiState.update {
-                    it.copy(
-                        availability = DeviceAdminAvailability.AVAILABLE,
-                        bootstrap = bootstrap,
-                    )
+                if (activationStore.isAdminBootstrapPending()) {
+                    _uiState.value = bootstrapState(bootstrap)
+                } else {
+                    _uiState.update {
+                        it.copy(
+                            availability = DeviceAdminAvailability.AVAILABLE,
+                            bootstrap = null,
+                            bootstrapPending = false,
+                            visible = false,
+                            busy = false,
+                            phase = DeviceAdminPhase.ADMIN_SCAN,
+                        )
+                    }
                 }
-            }.onFailure {
+            }.onFailure { throwable ->
+                if (throwable is DeviceAdminApiException && throwable.statusCode == 403) {
+                    activationStore.consumeAdminBootstrap()
+                }
                 _uiState.update {
                     it.copy(
                         availability = DeviceAdminAvailability.UNAVAILABLE,
                         bootstrap = null,
+                        bootstrapPending = false,
                         visible = false,
+                        busy = false,
                     )
                 }
             }
@@ -70,57 +92,18 @@ class DeviceAdminViewModel(application: Application) : AndroidViewModel(applicat
         _uiState.value = DeviceAdminUiState(
             visible = true,
             availability = current.availability,
-            bootstrap = current.bootstrap,
-            busy = true,
-        )
-        launchRequest(
-            block = repository::getBootstrap,
-            success = { bootstrap ->
-                _uiState.update { it.copy(bootstrap = bootstrap, busy = false) }
-            },
-            failure = { throwable ->
-                if (throwable is DeviceAdminApiException && throwable.statusCode == 403) {
-                    _uiState.value = DeviceAdminUiState(
-                        availability = DeviceAdminAvailability.UNAVAILABLE,
-                    )
-                } else {
-                    _uiState.update {
-                        it.copy(busy = false, errorResId = throwable.toStringResId())
-                    }
-                }
-            },
+            phase = DeviceAdminPhase.ADMIN_SCAN,
         )
     }
 
     fun close() {
-        if (_uiState.value.sessionAdminName.isBlank()) {
-            _uiState.value = hiddenState()
-            return
-        }
-        _uiState.update { it.copy(busy = true, errorResId = null) }
-        viewModelScope.launch {
-            runCatching { withContext(Dispatchers.IO) { repository.endSession() } }
-            _uiState.value = hiddenState()
-        }
-    }
-
-    fun beginAdminCardScan() {
-        _uiState.update { it.copy(phase = DeviceAdminPhase.ADMIN_SCAN, errorResId = null) }
-    }
-
-    fun beginBootstrap() {
-        val bootstrap = _uiState.value.bootstrap ?: return
-        _uiState.update {
-            when (bootstrap) {
-                is AdminBootstrap.Self -> it.copy(
-                    phase = DeviceAdminPhase.BOOTSTRAP_SCAN,
-                    selectedBootstrapAdmin = bootstrap.adminUser,
-                    errorResId = null,
-                )
-                is AdminBootstrap.Select -> it.copy(
-                    phase = DeviceAdminPhase.BOOTSTRAP_SELECT,
-                    errorResId = null,
-                )
+        requestJob?.cancel()
+        activationStore.consumeAdminBootstrap()
+        val hasActiveSession = _uiState.value.sessionAdminName.isNotBlank()
+        _uiState.value = hiddenState()
+        if (hasActiveSession) {
+            viewModelScope.launch {
+                runCatching { withContext(Dispatchers.IO) { repository.endSession() } }
             }
         }
     }
@@ -210,8 +193,12 @@ class DeviceAdminViewModel(application: Application) : AndroidViewModel(applicat
     }
 
     private fun onSessionStarted(session: AdminSession) {
+        if (_uiState.value.bootstrapPending) {
+            activationStore.consumeAdminBootstrap()
+        }
         _uiState.update {
             it.copy(
+                bootstrapPending = false,
                 sessionAdminName = session.adminUser.name,
                 expiresAt = session.expiresAt,
                 busy = true,
@@ -255,7 +242,7 @@ class DeviceAdminViewModel(application: Application) : AndroidViewModel(applicat
         success: (T) -> Unit,
         failure: ((Throwable) -> Unit)? = null,
     ) {
-        viewModelScope.launch {
+        requestJob = viewModelScope.launch {
             val result = runCatching { withContext(Dispatchers.IO) { block() } }
             result.onSuccess(success).onFailure { throwable ->
                 if (failure != null) {
@@ -269,11 +256,30 @@ class DeviceAdminViewModel(application: Application) : AndroidViewModel(applicat
         }
     }
 
+    private fun bootstrapState(bootstrap: AdminBootstrap): DeviceAdminUiState = when (bootstrap) {
+        is AdminBootstrap.Self -> DeviceAdminUiState(
+            visible = true,
+            availability = DeviceAdminAvailability.AVAILABLE,
+            phase = DeviceAdminPhase.BOOTSTRAP_SCAN,
+            bootstrap = bootstrap,
+            bootstrapPending = true,
+            selectedBootstrapAdmin = bootstrap.adminUser,
+        )
+        is AdminBootstrap.Select -> DeviceAdminUiState(
+            visible = true,
+            availability = DeviceAdminAvailability.AVAILABLE,
+            phase = DeviceAdminPhase.BOOTSTRAP_SELECT,
+            bootstrap = bootstrap,
+            bootstrapPending = true,
+        )
+    }
+
     private fun hiddenState(): DeviceAdminUiState {
         val current = _uiState.value
         return DeviceAdminUiState(
             availability = current.availability,
-            bootstrap = current.bootstrap,
+            bootstrapPending = false,
+            phase = DeviceAdminPhase.ADMIN_SCAN,
         )
     }
 

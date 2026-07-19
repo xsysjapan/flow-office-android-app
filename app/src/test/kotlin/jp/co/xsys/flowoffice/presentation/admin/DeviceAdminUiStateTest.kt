@@ -28,4 +28,15 @@ class DeviceAdminUiStateTest {
 
         assertEquals(true, state.canOpen)
     }
+
+    @Test
+    fun `initial bootstrap does not expose the normal admin action`() {
+        val state = DeviceAdminUiState(
+            availability = DeviceAdminAvailability.AVAILABLE,
+            bootstrapPending = true,
+            visible = true,
+        )
+
+        assertFalse(state.canOpen)
+    }
 }

@@ -28,7 +28,15 @@ class DeviceActivationStore(context: Context) {
             .putString(KEY_TOKEN_CIPHERTEXT, encryptedToken.ciphertext)
             .putString(KEY_TOKEN_IV, encryptedToken.iv)
             .putLong(KEY_PAIRED_AT_MILLIS, System.currentTimeMillis())
+            .putBoolean(KEY_ADMIN_BOOTSTRAP_PENDING, true)
             .apply()
+    }
+
+    fun isAdminBootstrapPending(): Boolean =
+        preferences.getBoolean(KEY_ADMIN_BOOTSTRAP_PENDING, false)
+
+    fun consumeAdminBootstrap() {
+        preferences.edit().putBoolean(KEY_ADMIN_BOOTSTRAP_PENDING, false).apply()
     }
 
     fun readActivation(): StoredDeviceActivation? {
@@ -129,6 +137,7 @@ class DeviceActivationStore(context: Context) {
         const val KEY_TOKEN_CIPHERTEXT = "token_ciphertext"
         const val KEY_TOKEN_IV = "token_iv"
         const val KEY_PAIRED_AT_MILLIS = "paired_at_millis"
+        const val KEY_ADMIN_BOOTSTRAP_PENDING = "admin_bootstrap_pending"
     }
 }
 

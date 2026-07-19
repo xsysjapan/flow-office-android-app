@@ -29,17 +29,17 @@ class AdminJsonParserTest {
     @Test
     fun `parses wrapped authentication key collection`() {
         val keys = AdminJsonParser.parseAuthenticationKeys(
-            """{"data":[{"id":30,"display_name":"社員証NFC","status":"active"}]}""",
+            """{"data":[{"id":30,"display_name":"NFCカード","status":"active"}]}""",
         )
 
-        assertEquals("社員証NFC", keys.single().displayName)
+        assertEquals("NFCカード", keys.single().displayName)
         assertEquals("active", keys.single().status)
     }
 
     @Test
     fun `parses wrapped registered authentication key`() {
         val key = AdminJsonParser.parseAuthenticationKeyResponse(
-            """{"data":{"id":31,"display_name":"社員証NFC","status":"active"}}""",
+            """{"data":{"id":31,"display_name":"NFCカード","status":"active"}}""",
         )
 
         assertEquals(31L, key.id)

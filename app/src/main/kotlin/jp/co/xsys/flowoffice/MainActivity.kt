@@ -104,8 +104,6 @@ class MainActivity : ComponentActivity() {
                         DeviceAdminScreen(
                             state = adminState,
                             onClose = adminViewModel::close,
-                            onBeginAdminCardScan = adminViewModel::beginAdminCardScan,
-                            onBeginBootstrap = adminViewModel::beginBootstrap,
                             onSelectBootstrapAdmin = adminViewModel::selectBootstrapAdmin,
                             onSearchQueryChange = adminViewModel::onSearchQueryChange,
                             onSearch = adminViewModel::searchUsers,

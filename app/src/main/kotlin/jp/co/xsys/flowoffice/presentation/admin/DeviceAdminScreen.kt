@@ -1,5 +1,6 @@
 package jp.co.xsys.flowoffice.presentation.admin
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -38,8 +39,6 @@ import jp.co.xsys.flowoffice.data.remote.AdminUser
 fun DeviceAdminScreen(
     state: DeviceAdminUiState,
     onClose: () -> Unit,
-    onBeginAdminCardScan: () -> Unit,
-    onBeginBootstrap: () -> Unit,
     onSelectBootstrapAdmin: (AdminUser) -> Unit,
     onSearchQueryChange: (String) -> Unit,
     onSearch: () -> Unit,
@@ -48,6 +47,7 @@ fun DeviceAdminScreen(
     onBackToUsers: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    BackHandler(onBack = onClose)
     Scaffold(
         modifier = modifier.fillMaxSize(),
         contentWindowInsets = WindowInsets.safeDrawing,
@@ -72,8 +72,8 @@ fun DeviceAdminScreen(
                         stringResource(R.string.admin_title),
                         style = MaterialTheme.typography.headlineMedium,
                     )
-                    OutlinedButton(onClick = onClose, enabled = !state.busy) {
-                        Text(stringResource(R.string.admin_end))
+                    OutlinedButton(onClick = onClose) {
+                        Text(stringResource(R.string.admin_back_to_punch))
                     }
                 }
                 if (state.sessionAdminName.isNotBlank()) {
@@ -84,12 +84,7 @@ fun DeviceAdminScreen(
                 }
                 HorizontalDivider()
                 when (state.phase) {
-                    DeviceAdminPhase.ENTRY -> EntryContent(
-                        bootstrap = state.bootstrap,
-                        busy = state.busy,
-                        onBeginAdminCardScan = onBeginAdminCardScan,
-                        onBeginBootstrap = onBeginBootstrap,
-                    )
+                    DeviceAdminPhase.ENTRY -> BootstrapLoadingContent()
                     DeviceAdminPhase.BOOTSTRAP_SELECT -> UserList(
                         heading = stringResource(R.string.admin_select_admin),
                         users = (state.bootstrap as? AdminBootstrap.Select)?.adminUsers.orEmpty(),
@@ -143,25 +138,17 @@ fun DeviceAdminScreen(
 }
 
 @Composable
-private fun EntryContent(
-    bootstrap: AdminBootstrap?,
-    busy: Boolean,
-    onBeginAdminCardScan: () -> Unit,
-    onBeginBootstrap: () -> Unit,
-) {
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text(stringResource(R.string.admin_entry_description), style = MaterialTheme.typography.bodyLarge)
-        Button(onClick = onBeginAdminCardScan, enabled = !busy, modifier = Modifier.fillMaxWidth()) {
-            Text(stringResource(R.string.admin_start_with_card))
-        }
-        OutlinedButton(
-            onClick = onBeginBootstrap,
-            enabled = bootstrap != null && !busy,
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Text(stringResource(R.string.admin_bootstrap_action))
-        }
-        if (busy) CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+private fun BootstrapLoadingContent() {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        Text(
+            stringResource(R.string.admin_bootstrap_loading),
+            style = MaterialTheme.typography.titleLarge,
+        )
+        CircularProgressIndicator()
     }
 }
 
