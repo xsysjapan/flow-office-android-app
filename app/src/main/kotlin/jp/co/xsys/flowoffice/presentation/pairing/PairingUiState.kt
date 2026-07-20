@@ -4,12 +4,12 @@ import androidx.annotation.StringRes
 import androidx.compose.runtime.Immutable
 @Immutable
 data class PairingUiState(
-    val apiBaseUrl: String = "",
+    val claimUrl: String = "",
     val claimToken: String = "",
     val submission: PairingSubmissionState = PairingSubmissionState.Idle,
 ) {
     val canSubmit: Boolean
-        get() = apiBaseUrl.isNotBlank() &&
+        get() = claimUrl.isNotBlank() &&
             claimToken.isNotBlank() &&
             submission !is PairingSubmissionState.Submitting
 }

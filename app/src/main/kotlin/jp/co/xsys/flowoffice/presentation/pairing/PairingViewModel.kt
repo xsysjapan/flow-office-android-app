@@ -30,7 +30,7 @@ class PairingViewModel(application: Application) : AndroidViewModel(application)
 
     fun onApiBaseUrlChange(value: String) {
         _uiState.update {
-            it.copy(apiBaseUrl = value, submission = PairingSubmissionState.Idle)
+            it.copy(claimUrl = value, submission = PairingSubmissionState.Idle)
         }
     }
 
@@ -54,7 +54,7 @@ class PairingViewModel(application: Application) : AndroidViewModel(application)
 
         _uiState.update {
             it.copy(
-                apiBaseUrl = "",
+                claimUrl = payload.claimUrl,
                 claimToken = payload.claimToken,
                 submission = PairingSubmissionState.Idle,
             )
@@ -70,8 +70,8 @@ class PairingViewModel(application: Application) : AndroidViewModel(application)
 
     fun activate() {
         val state = _uiState.value
-        val payload = PairingClaimPayloadParser.fromManualInput(
-            apiBaseUrl = state.apiBaseUrl,
+        val payload = PairingClaimPayloadParser.fromClaimUrl(
+            claimUrl = state.claimUrl,
             claimToken = state.claimToken,
         )
         if (!state.canSubmit || payload == null) {

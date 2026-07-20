@@ -11,11 +11,15 @@ class PairingRepository(
     fun activateDevice(
         payload: PairingClaimPayload,
     ) {
+        val appInstanceId = activationStore.getOrCreateAppInstanceId()
         val response = apiClient.claimPairing(
             claimUrl = payload.claimUrl,
             claimToken = payload.claimToken,
+            id = appInstanceId,
         )
 
+        // The API base URL is authoritative because the claim URL may include
+        // deployment-specific paths that cannot be reconstructed safely.
         activationStore.saveActivation(
             DeviceActivation(
                 apiBaseUrl = response.apiBaseUrl,

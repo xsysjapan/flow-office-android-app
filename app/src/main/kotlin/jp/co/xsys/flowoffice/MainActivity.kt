@@ -35,6 +35,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        val activationStore = DeviceActivationStore(this)
+        activationStore.getOrCreateAppInstanceId()
 
         setContent {
             FlowOfficeReaderTheme {
@@ -43,7 +45,7 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background,
                 ) {
                     var showPunch by remember {
-                        mutableStateOf(DeviceActivationStore(this).readActivation() != null)
+                        mutableStateOf(activationStore.readActivation() != null)
                     }
                     val pairingViewModel: PairingViewModel = viewModel()
                     val pairingState by pairingViewModel.uiState.collectAsStateWithLifecycle()

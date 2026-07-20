@@ -110,9 +110,9 @@ fun PairingScreen(
                 )
 
                 OutlinedTextField(
-                    value = state.apiBaseUrl,
+                    value = state.claimUrl,
                     onValueChange = onApiBaseUrlChange,
-                    label = { Text(stringResource(R.string.api_server_url)) },
+                    label = { Text(stringResource(R.string.activation_url)) },
                     enabled = allowApiUrlEditing && !isSubmitting,
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
@@ -231,7 +231,7 @@ private fun PairingScreenTabletDarkPreview() {
     FlowOfficeReaderTheme(darkTheme = true) {
         PairingScreenPreviewContent(
             state = PairingUiState(
-                apiBaseUrl = "https://office.example.jp/api/",
+                claimUrl = "https://office.example.jp/api/",
                 submission = PairingSubmissionState.Error(
                     R.string.error_pairing_unauthorized,
                 ),

@@ -28,7 +28,7 @@ class PairingScreenTest {
         var clicks = 0
         setPairingContent(
             state = PairingUiState(
-                apiBaseUrl = "https://office.example.jp/api/",
+                claimUrl = "https://office.example.jp/api/",
                 claimToken = "temporary-token",
             ),
             onPair = { clicks += 1 },

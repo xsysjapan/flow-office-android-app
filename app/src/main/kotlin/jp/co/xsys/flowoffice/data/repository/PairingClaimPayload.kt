@@ -31,17 +31,7 @@ object PairingClaimPayloadParser {
         )
     }
 
-    fun fromManualInput(apiBaseUrl: String, claimToken: String): PairingClaimPayload? {
-        val normalizedBaseUrl = apiBaseUrl.trim().trimEnd('/')
-        val claimUrl = if (normalizedBaseUrl.endsWith("/api")) {
-            "$normalizedBaseUrl$CLAIM_PATH"
-        } else {
-            "$normalizedBaseUrl/api$CLAIM_PATH"
-        }
-        return fromClaimUrl(claimUrl, claimToken)
-    }
-
-    private fun fromClaimUrl(claimUrl: String, claimToken: String): PairingClaimPayload? {
+    fun fromClaimUrl(claimUrl: String, claimToken: String): PairingClaimPayload? {
         val normalizedUrl = claimUrl.trim()
         val uri = parseUri(normalizedUrl) ?: return null
         if (!isValidClaimEndpoint(uri) || uri.query != null || claimToken.isBlank()) return null

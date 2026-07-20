@@ -12,18 +12,24 @@ class PairingApiClient {
     fun claimPairing(
         claimUrl: String,
         claimToken: String,
+        id: String,
     ): PairingClaimResponse {
         val endpoint = URL(claimUrl)
         val connection = endpoint.openConnection() as HttpURLConnection
 
         try {
+            val requestJson = PairingClaimRequest(id).toJsonString()
+
             connection.requestMethod = "POST"
             connection.connectTimeout = CONNECT_TIMEOUT_MILLIS
             connection.readTimeout = READ_TIMEOUT_MILLIS
             connection.doOutput = true
             connection.setRequestProperty("Accept", "application/json")
+            connection.setRequestProperty("Content-Type", "application/json; charset=utf-8")
             connection.setRequestProperty("Authorization", "Bearer $claimToken")
-            connection.outputStream.use { }
+            connection.outputStream.use { output ->
+                output.write(requestJson.toByteArray(Charsets.UTF_8))
+            }
 
             val statusCode = connection.responseCode
             val responseBody = readResponseBody(connection, statusCode)
@@ -120,6 +126,14 @@ class PairingApiClient {
         const val CONNECT_TIMEOUT_MILLIS = 15_000
         const val READ_TIMEOUT_MILLIS = 15_000
     }
+}
+
+data class PairingClaimRequest(
+    val id: String,
+) {
+    fun toJsonString(): String = JSONObject()
+        .put("id", id)
+        .toString()
 }
 
 data class PairingClaimResponse(

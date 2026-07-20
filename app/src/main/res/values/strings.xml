@@ -5,7 +5,7 @@
     <string name="pairing_scan_qr">QRコードを読み取る</string>
     <string name="pairing_manual_heading">QRコードを使えない場合</string>
     <string name="pairing_manual_description">管理画面でコピーした一時トークンを貼り付けてください。</string>
-    <string name="api_server_url">APIサーバーURL</string>
+    <string name="activation_url">アクティベーションURL</string>
     <string name="pairing_claim_token">一時トークン</string>
     <string name="pairing_claim_token_support">管理画面で発行された5分間有効な文字列</string>
     <string name="pairing_manual_action">一時トークンで接続</string>
