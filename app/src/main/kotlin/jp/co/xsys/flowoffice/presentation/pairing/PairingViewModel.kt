@@ -44,7 +44,7 @@ class PairingViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun onQrCodeScanned(rawValue: String?) {
-        val payload = rawValue?.let(PairingClaimPayloadParser::fromQrJson)
+        val payload = rawValue?.let(PairingClaimPayloadParser::fromQrUrl)
         if (payload == null) {
             _uiState.update {
                 it.copy(submission = PairingSubmissionState.Error(R.string.error_pairing_qr_invalid))
@@ -54,7 +54,7 @@ class PairingViewModel(application: Application) : AndroidViewModel(application)
 
         _uiState.update {
             it.copy(
-                apiBaseUrl = payload.apiBaseUrl,
+                apiBaseUrl = "",
                 claimToken = payload.claimToken,
                 submission = PairingSubmissionState.Idle,
             )

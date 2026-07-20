@@ -394,15 +394,12 @@ sequenceDiagram
 
 ### 11.1 ペアリング交換
 
-`POST /api/devices/pairing/claim`はclaim tokenをBearer認証として呼ぶ。QR定義は次のJSONとする。
+`POST /devices/pairing/claim`はclaim tokenをBearer認証として呼ぶ。QR定義は次のURLとする。
 claim tokenは5分間有効で、一度交換すると再利用できない。端末IDをQRやリクエスト本文へ含めず、
 claim tokenに紐づくバックエンドの`devices.id`を成功レスポンスから取得する。
 
-```json
-{
-  "url": "https://office.example.jp/api/devices/pairing/claim",
-  "claim_token": "一時トークン"
-}
+```text
+https://office.example.jp/flow-office/api/devices/pairing/claim?claim_token=<一時トークン>
 ```
 
 Androidが初回起動時に生成するUUIDは`appInstanceId`であり、バックエンド採番の整数`devices.id`
@@ -421,12 +418,14 @@ Androidが初回起動時に生成するUUIDは`appInstanceId`であり、バッ
     "auto_detect_punch_type": false,
     "paired_at": "2026-07-19T09:00:00+09:00"
   },
-  "token": "1|..."
+  "token": "1|...",
+  "api_base_url": "https://office.example.jp/flow-office/api"
 }
 ```
 
 Android DTOは`access_token`ではなく`token`を読む。交換時点で端末role由来のSanctum ability
-(共有端末は`*`、外部端末は`recorder:punch`)が発行される。
+(共有端末は`*`、外部端末は`recorder:punch`)が発行される。以降のAPI呼び出しに使う
+ベースURLはQRのURLから切り出さず、成功レスポンスの`api_base_url`を保存する。
 
 ### 11.2 本人特定
 
@@ -737,7 +736,7 @@ API内部の例外文、スタックトレース、URL、トークンは利用�
 ### 19.1 実装着手に必要な契約(確定済み)
 
 - Device IDはバックエンド採番の整数、ownershipは`organization_shared`
-- ペアリングはQRの`url`と`claim_token`を使い、`device`と本`token`を受け取る
+- ペアリングはQR URLの`claim_token`を使い、`device`、本`token`、`api_base_url`を受け取る
 - Android生成UUIDの`appInstanceId`はDevice IDとは別の補助識別子
 - 共有端末tokenは`Device`を主体とするSanctum tokenで、abilityは`recorder:punch`
 - 端末打刻は現行`AttendancePunchResource`を200で返し、heartbeatは`app_version`を受け付ける

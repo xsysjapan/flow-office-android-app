@@ -74,10 +74,17 @@ class PairingApiClient {
     private fun parseSuccess(responseBody: String): PairingClaimResponse {
         val json = JSONObject(responseBody)
         val token = json.optString("token")
+        val apiBaseUrl = json.optString("api_base_url")
         if (token.isBlank()) {
             throw PairingApiException(
                 statusCode = null,
                 error = AppError.PairingTokenMissing,
+            )
+        }
+        if (apiBaseUrl.isBlank()) {
+            throw PairingApiException(
+                statusCode = null,
+                error = AppError.PairingResponseInvalid,
             )
         }
 
@@ -90,6 +97,7 @@ class PairingApiClient {
 
         return PairingClaimResponse(
             token = token,
+            apiBaseUrl = apiBaseUrl,
             deviceId = deviceId,
             deviceJson = device.toString(),
         )
@@ -116,6 +124,7 @@ class PairingApiClient {
 
 data class PairingClaimResponse(
     val token: String,
+    val apiBaseUrl: String,
     val deviceId: Long,
     val deviceJson: String,
 )

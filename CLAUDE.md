@@ -231,7 +231,7 @@ interfaceを実装する。初期版は単一Gradleモジュールでよい。�
 ## API契約の要点
 
 - Base path: `/api`
-- Pairing: `POST /devices/pairing/claim`。QRは`{url, claim_token}`、claim tokenをBearer認証に使用し、成功項目は`device`と`token`
+- Pairing: `POST /devices/pairing/claim`。QRは`{APIベースURL}/devices/pairing/claim?claim_token=<token>`、claim tokenをBearer認証に使用し、成功項目は`device`、`token`、`api_base_url`
 - Shared owner type: `organization_shared`
 - Punch: `POST /device-punches`、成功は現行`AttendancePunchResource`
 - Heartbeat: `POST /devices/heartbeat`、現行Requestは`app_version`のみ

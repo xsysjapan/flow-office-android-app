@@ -25,23 +25,20 @@ Android向けのflow-office打刻リーダーアプリです。
 
 ## アクティベーション
 
-管理画面が表示する次のJSON形式のQRコードを読み取ります。
+管理画面が表示する次のURL形式のQRコードを読み取ります。
 
-```json
-{
-  "url": "https://example.jp/api/devices/pairing/claim",
-  "claim_token": "一時トークン"
-}
+```text
+https://example.jp/flow-office/api/devices/pairing/claim?claim_token=<一時トークン>
 ```
 
-`url` に対して、`claim_token`をBearer tokenとして次のAPIを呼びます。リクエストボディはありません。
+クエリから取得した`claim_token`をBearer tokenとして次のAPIを呼びます。リクエストボディはありません。
 
 ```text
 POST /api/devices/pairing/claim
 Authorization: Bearer <claim_token>
 ```
 
-QRコードを使えない場合は、APIサーバーURLと管理画面からコピーしたclaim tokenを手入力できます。claim tokenは5分間有効で、一度交換すると再利用できません。成功レスポンスの`device.id`と本トークンを端末へ保存します。
+QRコードを使えない場合は、APIサーバーURLと管理画面からコピーしたclaim tokenを手入力できます。claim tokenは5分間有効で、一度交換すると再利用できません。成功レスポンスの`api_base_url`、`device.id`、本トークンを端末へ保存します。
 
 ## ビルドとテスト
 

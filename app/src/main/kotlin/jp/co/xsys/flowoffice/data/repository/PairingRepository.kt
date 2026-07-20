@@ -18,7 +18,7 @@ class PairingRepository(
 
         activationStore.saveActivation(
             DeviceActivation(
-                apiBaseUrl = payload.apiBaseUrl,
+                apiBaseUrl = response.apiBaseUrl,
                 deviceId = response.deviceId,
                 token = response.token,
                 deviceJson = response.deviceJson,

@@ -6,22 +6,30 @@ import org.junit.Test
 
 class PairingClaimPayloadParserTest {
     @Test
-    fun `parses documented QR payload`() {
-        val payload = PairingClaimPayloadParser.fromQrJson(
-            """{"url":"https://office.example.jp/api/devices/pairing/claim","claim_token":"1|secret"}""",
+    fun `parses claim URL with token from QR`() {
+        val payload = PairingClaimPayloadParser.fromQrUrl(
+            "https://office.example.jp/flow-office/api/devices/pairing/claim?claim_token=1%7Csecret",
         )
 
         requireNotNull(payload)
-        assertEquals("https://office.example.jp/api/devices/pairing/claim", payload.claimUrl)
-        assertEquals("https://office.example.jp/api", payload.apiBaseUrl)
+        assertEquals("https://office.example.jp/flow-office/api/devices/pairing/claim", payload.claimUrl)
         assertEquals("1|secret", payload.claimToken)
     }
 
     @Test
     fun `rejects a QR with a different endpoint`() {
         assertNull(
-            PairingClaimPayloadParser.fromQrJson(
-                """{"url":"https://evil.example/api/token","claim_token":"1|secret"}""",
+            PairingClaimPayloadParser.fromQrUrl(
+                "https://evil.example/api/token?claim_token=1%7Csecret",
+            ),
+        )
+    }
+
+    @Test
+    fun `rejects a QR without a claim token`() {
+        assertNull(
+            PairingClaimPayloadParser.fromQrUrl(
+                "https://office.example.jp/flow-office/api/devices/pairing/claim",
             ),
         )
     }
