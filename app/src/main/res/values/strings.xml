@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">flow-office 打刻リーダー</string>
+    <string name="app_name">Flow Office</string>
     <string name="pairing_title">端末をアクティベーション</string>
     <string name="pairing_description">管理画面に表示されたQRコードを読み取って、共有端末として接続します。</string>
     <string name="pairing_scan_qr">QRコードを読み取る</string>

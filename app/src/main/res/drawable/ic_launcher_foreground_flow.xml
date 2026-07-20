@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path android:pathData="M37,48C37.6,38.5 40,32 48,30.5C50.5,30 52,30 54,30H75L71,37C69.2,40.2 66,42 61.5,42H52C45.5,42 41,44 37,48Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:endX="70"
+                android:endY="42"
+                android:startX="38"
+                android:startY="31"
+                android:type="linear">
+                <item android:color="#FF00E7E7" android:offset="0" />
+                <item android:color="#FF00CFF4" android:offset="1" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <path android:pathData="M36.8,51.2C41.4,46.3 47.2,43.8 54.2,43.8H72L68.2,50.3C66.1,53.9 62.7,55.8 58.4,55.8H53.6C50.2,55.8 48.2,57.7 47.6,61.2L45.1,76.5C45,77.2 44.4,77.7 43.7,77.7H37.5C36.8,77.7 36.4,77 36.6,76.3L39.6,58.9C40.2,55.8 34,55 36.8,51.2Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:endX="69"
+                android:endY="45"
+                android:startX="39"
+                android:startY="76"
+                android:type="linear">
+                <item android:color="#FF0A8CF5" android:offset="0" />
+                <item android:color="#FF1677ED" android:offset="1" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M41.55,61.5H43.65A0.35,0.35 0,0 1,44 61.85V63.95A0.35,0.35 0,0 1,43.65 64.3H41.55A0.35,0.35 0,0 1,41.2 63.95V61.85A0.35,0.35 0,0 1,41.55 61.5ZM40.85,67.1H42.95A0.35,0.35 0,0 1,43.3 67.45V69.55A0.35,0.35 0,0 1,42.95 69.9H40.85A0.35,0.35 0,0 1,40.5 69.55V67.45A0.35,0.35 0,0 1,40.85 67.1ZM40.05,72.7H42.15A0.35,0.35 0,0 1,42.5 73.05V75.15A0.35,0.35 0,0 1,42.15 75.5H40.05A0.35,0.35 0,0 1,39.7 75.15V73.05A0.35,0.35 0,0 1,40.05 72.7Z" />
+</vector>
