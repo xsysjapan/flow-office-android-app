@@ -4,6 +4,25 @@ plugins {
   alias(libs.plugins.kotlin.serialization)
 }
 
+val releaseVersionName = providers.environmentVariable("RELEASE_VERSION_NAME").orElse("1.0")
+val releaseVersionCode = providers.environmentVariable("RELEASE_VERSION_CODE").orElse("1")
+val releaseKeystorePath = providers.environmentVariable("ANDROID_KEYSTORE_PATH")
+val releaseKeystorePassword = providers.environmentVariable("ANDROID_KEYSTORE_PASSWORD")
+val releaseKeyAlias = providers.environmentVariable("ANDROID_KEY_ALIAS")
+val releaseKeyPassword = providers.environmentVariable("ANDROID_KEY_PASSWORD")
+val releaseSigningValues = listOf(
+    releaseKeystorePath,
+    releaseKeystorePassword,
+    releaseKeyAlias,
+    releaseKeyPassword,
+)
+val configuredReleaseSigningValues = releaseSigningValues.count { it.isPresent }
+check(configuredReleaseSigningValues == 0 || configuredReleaseSigningValues == releaseSigningValues.size) {
+    "Release signing requires ANDROID_KEYSTORE_PATH, ANDROID_KEYSTORE_PASSWORD, " +
+        "ANDROID_KEY_ALIAS, and ANDROID_KEY_PASSWORD."
+}
+val hasReleaseSigningConfig = configuredReleaseSigningValues == releaseSigningValues.size
+
 android {
     namespace = "jp.co.xsys.flowoffice"
     compileSdk = 36
@@ -11,15 +30,29 @@ android {
         applicationId = "jp.co.xsys.flowoffice"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = releaseVersionCode.get().toInt()
+        versionName = releaseVersionName.get()
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    signingConfigs {
+        if (hasReleaseSigningConfig) {
+            create("release") {
+                storeFile = file(releaseKeystorePath.get())
+                storePassword = releaseKeystorePassword.get()
+                keyAlias = releaseKeyAlias.get()
+                keyPassword = releaseKeyPassword.get()
+            }
+        }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            if (hasReleaseSigningConfig) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
     }
     compileOptions {

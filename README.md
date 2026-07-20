@@ -2,6 +2,10 @@
 
 Android向けのflow-office打刻リーダーアプリです。
 
+## APKのリリース
+
+バージョンタグから署名済みAPKをGitHub Releasesへ自動公開できます。初回設定とリリース手順は [docs/github-releases.md](docs/github-releases.md) を参照してください。
+
 ## 現在の実装
 
 - package / application ID: `jp.co.xsys.flowoffice`
