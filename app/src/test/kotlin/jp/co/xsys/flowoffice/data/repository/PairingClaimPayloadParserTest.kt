@@ -35,13 +35,24 @@ class PairingClaimPayloadParserTest {
     }
 
     @Test
-    fun `builds claim endpoint from manual API base URL`() {
-        val payload = PairingClaimPayloadParser.fromManualInput(
-            apiBaseUrl = "https://office.example.jp/api/",
+    fun `builds payload from manually entered claim URL`() {
+        val payload = PairingClaimPayloadParser.fromClaimUrl(
+            claimUrl = "https://office.example.jp/api/devices/pairing/claim",
             claimToken = "1|secret",
         )
 
         requireNotNull(payload)
         assertEquals("https://office.example.jp/api/devices/pairing/claim", payload.claimUrl)
+        assertEquals("1|secret", payload.claimToken)
+    }
+
+    @Test
+    fun `rejects manual claim URL with a query string`() {
+        assertNull(
+            PairingClaimPayloadParser.fromClaimUrl(
+                claimUrl = "https://office.example.jp/api/devices/pairing/claim?claim_token=1",
+                claimToken = "1|secret",
+            ),
+        )
     }
 }
