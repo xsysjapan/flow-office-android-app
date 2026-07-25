@@ -9,7 +9,7 @@ data class PunchUiState(
     val selectedType: PunchType = PunchType.CLOCK_IN,
     val operation: PunchOperationState = PunchOperationState.WaitingForNfc,
     val pendingCount: Int = 0,
-    val deviceId: Long? = null,
+    val deviceId: String? = null,
     val appInstanceId: String = "",
     val canPunch: Boolean = false,
     val connection: ServerConnectionState = ServerConnectionState.Checking,

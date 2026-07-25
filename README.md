@@ -2,9 +2,13 @@
 
 Android向けのflow-office打刻リーダーアプリです。
 
+## CI
+
+プルリクエストを作成すると、GitHub Actions (`CI`ワークフロー) が単体テスト・デバッグビルド・lint・instrumentationテストのビルドを自動実行します。
+
 ## APKのリリース
 
-バージョンタグから署名済みAPKをGitHub Releasesへ自動公開できます。初回設定とリリース手順は [docs/github-releases.md](docs/github-releases.md) を参照してください。
+バージョンタグから署名済みAPKをGitHub Releasesへ自動公開できます。タグpush時のリリースワークフローも公開前にテスト・lint・ビルドを実行します。初回設定とリリース手順は [docs/github-releases.md](docs/github-releases.md) を参照してください。
 
 ## 現在の実装
 
@@ -58,7 +62,7 @@ app/build/outputs/apk/debug/app-debug.apk
 
 AndroidのハードウェアID、IMEI、シリアル、MACアドレスは使用しません。Android Developersの識別子ベストプラクティスに従い、このアプリでは初回起動時にアプリ専用のUUIDを生成して内部ストレージに保存します。
 
-flow-officeの`devices.id`はバックエンドが採番する整数で、claim tokenからサーバー側が対象端末を特定し、成功レスポンスの`device.id`として返します。Androidが初回起動時に生成するUUIDは別のアプリインスタンスIDです。端末側の補助識別子として保存し、打刻API送信時に`X-Flow-Office-App-Instance-Id`ヘッダーで送信します。
+flow-officeの`devices.id`はバックエンドが採番するUUID文字列で、claim tokenからサーバー側が対象端末を特定し、成功レスポンスの`device.id`として返します。Androidが初回起動時に生成するUUIDは別のアプリインスタンスIDです。端末側の補助識別子として保存し、打刻API送信時に`X-Flow-Office-App-Instance-Id`ヘッダーで送信します。
 
 ## 次の実装候補
 
