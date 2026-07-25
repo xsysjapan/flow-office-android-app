@@ -14,14 +14,14 @@ class DeviceAdminRepository(
     private val activationStore: DeviceActivationStore,
 ) {
     fun getBootstrap(): AdminBootstrap = apiClient.getBootstrap(request())
-    fun registerBootstrapCard(adminUserId: Long?, rawKeyValue: String): AdminSession =
+    fun registerBootstrapCard(adminUserId: String?, rawKeyValue: String): AdminSession =
         apiClient.registerBootstrapCard(request(), adminUserId, rawKeyValue)
     fun startSession(rawKeyValue: String): AdminSession = apiClient.startSession(request(), rawKeyValue)
     fun endSession() = apiClient.endSession(request())
     fun getUsers(query: String): List<AdminUser> = apiClient.getUsers(request(), query)
-    fun getKeys(userId: Long): List<AuthenticationKeySummary> =
+    fun getKeys(userId: String): List<AuthenticationKeySummary> =
         apiClient.getAuthenticationKeys(request(), userId)
-    fun registerKey(userId: Long, rawKeyValue: String): AuthenticationKeySummary =
+    fun registerKey(userId: String, rawKeyValue: String): AuthenticationKeySummary =
         apiClient.registerAuthenticationKey(request(), userId, rawKeyValue)
 
     private fun request(): DeviceAdminRequest {

@@ -47,7 +47,7 @@
 | 端末打刻 | `POST /api/device-punches`、ability `recorder:punch` |
 | 本人特定 | `POST /api/devices/identity/resolve` |
 | ハートビート | `POST /api/devices/heartbeat` |
-| 端末ID | DB自動採番の整数 |
+| 端末ID | `HasUuids`によるUUID文字列(36桁) |
 
 ### 2.3 Android連携APIの実装状況と差分
 
@@ -230,7 +230,8 @@ data class PunchEvent(
 )
 ```
 
-`flow-office`の`devices.id`は自動採番整数として実装済みなので、Androidも`Long`で保持する。
+`flow-office`の`devices.id`・`users.id`は`HasUuids`によるUUID文字列(36桁、ハイフン区切り)として
+実装済みなので、Androidも`String`で保持し、`Long`へ変換しない。
 
 ## 7. 状態設計
 
@@ -402,13 +403,15 @@ claim tokenに紐づくバックエンドの`devices.id`を成功レスポンス
 https://office.example.jp/flow-office/api/devices/pairing/claim?claim_token=<一時トークン>
 ```
 
-Androidが初回起動時に生成するUUIDは`appInstanceId`であり、バックエンド採番の整数`devices.id`
-とは別の識別子として保持する。
+Androidが初回起動時に生成するUUIDは`appInstanceId`であり、バックエンド採番のUUID文字列
+`devices.id`とは別の識別子として保持する。`devices.id`・`users.id`は`HasUuids`によるUUID文字列
+(36桁、ハイフン区切り)であり、整数の連番ではない。Android側は`device_id`、`user_id`、
+`authentication_key_id`など全ての識別子を`String`として扱い、`Long`へ変換しない。
 
 ```json
 {
   "device": {
-    "id": 123,
+    "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
     "owner_type": "organization_shared",
     "name": "名古屋本社入口",
     "device_type": "android",
@@ -437,9 +440,9 @@ Android DTOは`access_token`ではなく`token`を読む。交換時点で端末
 
 ```json
 {
-  "user_id": 42,
+  "user_id": "3fa85f64-5717-4562-b3fc-2c963f66afb1",
   "name": "山田 太郎",
-  "authentication_key_id": 10
+  "authentication_key_id": "3fa85f64-5717-4562-b3fc-2c963f66afb2"
 }
 ```
 
@@ -467,15 +470,15 @@ Android DTOは`access_token`ではなく`token`を読む。交換時点で端末
 
 ```json
 {
-  "id": 4567,
-  "user_id": 42,
+  "id": "3fa85f64-5717-4562-b3fc-2c963f66afb3",
+  "user_id": "3fa85f64-5717-4562-b3fc-2c963f66afb1",
   "work_date": "2026-07-19",
   "punch_type": "clock_in",
   "punched_at": "2026-07-19T09:00:12+09:00",
   "source": "device:android",
-  "device_id": 123,
-  "authentication_key_id": 10,
-  "actor_user_id": 42,
+  "device_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "authentication_key_id": "3fa85f64-5717-4562-b3fc-2c963f66afb2",
+  "actor_user_id": "3fa85f64-5717-4562-b3fc-2c963f66afb1",
   "offline": false,
   "note": null,
   "status": "active",
@@ -528,7 +531,7 @@ Laravel validationは`message`と`errors`、ドメインルール違反は主に
 
 | テーブル(概目) | 用途 |
 |---|---|
-| `devices` | 整数ID、owner、type、status、設定、heartbeat、ペアリング情報 |
+| `devices` | UUID文字列ID、owner、type、status、設定、heartbeat、ペアリング情報 |
 | `device_roles` | `attendance_reader`等。token abilityの元 |
 | `device_scopes` | 外部端末向け個別scope |
 | `authentication_keys` | 社員認証キー。生値は保存せずHMAC-SHA-256 |
@@ -735,7 +738,7 @@ API内部の例外文、スタックトレース、URL、トークンは利用�
 
 ### 19.1 実装着手に必要な契約(確定済み)
 
-- Device IDはバックエンド採番の整数、ownershipは`organization_shared`
+- Device ID・User IDは`HasUuids`によるUUID文字列(36桁)、ownershipは`organization_shared`
 - ペアリングはQR URLの`claim_token`を使い、`device`、本`token`、`api_base_url`を受け取る
 - Android生成UUIDの`appInstanceId`はDevice IDとは別の補助識別子
 - 共有端末tokenは`Device`を主体とするSanctum tokenで、abilityは`recorder:punch`

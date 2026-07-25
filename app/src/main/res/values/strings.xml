@@ -52,7 +52,7 @@
     <string name="punch_current_day_warning">打刻の組み合わせを確認してください</string>
     <string name="punch_error_heading">打刻できませんでした</string>
     <string name="punch_pending_count">未送信: %1$d件</string>
-    <string name="punch_device_info">端末ID: %1$d / アプリID: %2$s</string>
+    <string name="punch_device_info">端末ID: %1$s / アプリID: %2$s</string>
     <string name="server_connection_checking">サーバー確認中</string>
     <string name="server_connection_connected">サーバー接続済み</string>
     <string name="server_connection_disconnected">サーバー未接続</string>

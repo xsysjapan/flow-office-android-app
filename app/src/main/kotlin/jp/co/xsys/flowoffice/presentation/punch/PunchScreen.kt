@@ -436,7 +436,7 @@ private fun formatPunchTime(value: String?): String? {
 private fun PunchScreenPhonePreview() {
     FlowOfficeReaderTheme {
         PunchScreen(
-            state = PunchUiState(deviceId = 123, appInstanceId = "12345678-demo", canPunch = true, connection = ServerConnectionState.Connected),
+            state = PunchUiState(deviceId = "3fa85f64-5717-4562-b3fc-2c963f66afa6", appInstanceId = "12345678-demo", canPunch = true, connection = ServerConnectionState.Connected),
             onSelectType = {}, onOpenDeviceAdmin = {}, showDeviceAdminAction = true,
         )
     }
@@ -450,7 +450,7 @@ private fun PunchScreenSuccessPreview() {
             state = PunchUiState(
                 selectedType = PunchType.CLOCK_OUT,
                 operation = PunchOperationState.Success(PunchResult("山田 太郎", "2026-07-19T18:12:00+09:00", PunchType.CLOCK_OUT, 492, 1)),
-                deviceId = 123, appInstanceId = "12345678-demo", canPunch = true, connection = ServerConnectionState.Connected,
+                deviceId = "3fa85f64-5717-4562-b3fc-2c963f66afa6", appInstanceId = "12345678-demo", canPunch = true, connection = ServerConnectionState.Connected,
             ),
             onSelectType = {}, onOpenDeviceAdmin = {}, showDeviceAdminAction = true,
         )
@@ -463,7 +463,7 @@ private fun PunchScreenLandscapePreview() {
     FlowOfficeReaderTheme {
         PunchScreen(
             state = PunchUiState(
-                deviceId = 123,
+                deviceId = "3fa85f64-5717-4562-b3fc-2c963f66afa6",
                 appInstanceId = "12345678-demo",
                 canPunch = true,
                 connection = ServerConnectionState.Connected,
@@ -482,7 +482,7 @@ private fun PunchScreenDarkPreview() {
         PunchScreen(
             state = PunchUiState(
                 operation = PunchOperationState.Error(R.string.error_punch_connection_failed),
-                pendingCount = 2, deviceId = 123, appInstanceId = "12345678-demo", canPunch = true,
+                pendingCount = 2, deviceId = "3fa85f64-5717-4562-b3fc-2c963f66afa6", appInstanceId = "12345678-demo", canPunch = true,
                 connection = ServerConnectionState.Disconnected,
             ),
             onSelectType = {}, onOpenDeviceAdmin = {}, showDeviceAdminAction = false,

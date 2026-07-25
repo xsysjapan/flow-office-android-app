@@ -95,7 +95,7 @@ class PairingApiClient {
         }
 
         val device = json.optJSONObject("device")
-        val deviceId = device?.optLong("id")?.takeIf { it > 0 }
+        val deviceId = device?.optString("id")?.takeIf { it.isNotBlank() }
             ?: throw PairingApiException(
                 statusCode = null,
                 error = AppError.PairingResponseInvalid,
@@ -139,7 +139,7 @@ data class PairingClaimRequest(
 data class PairingClaimResponse(
     val token: String,
     val apiBaseUrl: String,
-    val deviceId: Long,
+    val deviceId: String,
     val deviceJson: String,
 )
 

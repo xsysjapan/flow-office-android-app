@@ -16,7 +16,7 @@ class DeviceAdminApiClient {
 
     fun registerBootstrapCard(
         request: DeviceAdminRequest,
-        adminUserId: Long?,
+        adminUserId: String?,
         rawKeyValue: String,
     ): AdminSession = execute(
         request,
@@ -47,7 +47,7 @@ class DeviceAdminApiClient {
 
     fun getAuthenticationKeys(
         request: DeviceAdminRequest,
-        userId: Long,
+        userId: String,
     ): List<AuthenticationKeySummary> = execute(
         request,
         "GET",
@@ -56,7 +56,7 @@ class DeviceAdminApiClient {
 
     fun registerAuthenticationKey(
         request: DeviceAdminRequest,
-        userId: Long,
+        userId: String,
         rawKeyValue: String,
     ): AuthenticationKeySummary = execute(
         request,
@@ -167,14 +167,14 @@ object AdminJsonParser {
     }
 
     fun parseSession(json: JSONObject) = AdminSession(
-        id = json.getLong("id"),
+        id = json.getString("id"),
         adminUser = parseUser(json.getJSONObject("admin_user")),
         source = json.getString("source"),
         expiresAt = json.getString("expires_at"),
     )
 
     fun parseAuthenticationKey(json: JSONObject) = AuthenticationKeySummary(
-        id = json.getLong("id"),
+        id = json.getString("id"),
         displayName = json.optString("display_name", "NFCカード"),
         status = json.optString("status"),
     )
@@ -189,7 +189,7 @@ object AdminJsonParser {
     }
 
     private fun parseUser(json: JSONObject) = AdminUser(
-        id = json.getLong("id"),
+        id = json.getString("id"),
         name = json.getString("name"),
         email = json.optionalString("email"),
         department = json.optionalString("department"),
@@ -210,9 +210,9 @@ sealed interface AdminBootstrap {
     data class Select(val adminUsers: List<AdminUser>) : AdminBootstrap
 }
 
-data class AdminUser(val id: Long, val name: String, val email: String, val department: String)
-data class AdminSession(val id: Long, val adminUser: AdminUser, val source: String, val expiresAt: String)
-data class AuthenticationKeySummary(val id: Long, val displayName: String, val status: String)
+data class AdminUser(val id: String, val name: String, val email: String, val department: String)
+data class AdminSession(val id: String, val adminUser: AdminUser, val source: String, val expiresAt: String)
+data class AuthenticationKeySummary(val id: String, val displayName: String, val status: String)
 
 class DeviceAdminApiException(
     val statusCode: Int?,

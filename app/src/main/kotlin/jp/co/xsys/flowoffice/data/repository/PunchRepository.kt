@@ -62,7 +62,7 @@ class PunchRepository(
 }
 
 data class DeviceSummary(
-    val deviceId: Long,
+    val deviceId: String,
     val appInstanceId: String,
     val canPunch: Boolean,
 )

@@ -22,7 +22,7 @@ class DeviceActivationStore(context: Context) {
         val encryptedToken = encryptToken(activation.token)
         preferences.edit()
             .putString(KEY_APP_INSTANCE_ID, getOrCreateAppInstanceId())
-            .putLong(KEY_DEVICE_ID, activation.deviceId)
+            .putString(KEY_DEVICE_ID, activation.deviceId)
             .putString(KEY_API_BASE_URL, activation.apiBaseUrl)
             .putString(KEY_DEVICE_JSON, activation.deviceJson)
             .putString(KEY_TOKEN_CIPHERTEXT, encryptedToken.ciphertext)
@@ -43,8 +43,7 @@ class DeviceActivationStore(context: Context) {
         val apiBaseUrl = preferences.getString(KEY_API_BASE_URL, null) ?: return null
         val ciphertext = preferences.getString(KEY_TOKEN_CIPHERTEXT, null) ?: return null
         val iv = preferences.getString(KEY_TOKEN_IV, null) ?: return null
-        val deviceId = preferences.getLong(KEY_DEVICE_ID, MISSING_DEVICE_ID)
-        if (deviceId == MISSING_DEVICE_ID) return null
+        val deviceId = preferences.getString(KEY_DEVICE_ID, null) ?: return null
 
         return StoredDeviceActivation(
             apiBaseUrl = apiBaseUrl,
@@ -129,7 +128,6 @@ class DeviceActivationStore(context: Context) {
         const val PREFERENCES_NAME = "device_activation"
         const val TRANSFORMATION = "AES/GCM/NoPadding"
         const val GCM_TAG_LENGTH_BITS = 128
-        const val MISSING_DEVICE_ID = -1L
         const val KEY_APP_INSTANCE_ID = "app_instance_id"
         const val KEY_API_BASE_URL = "api_base_url"
         const val KEY_DEVICE_ID = "device_id"
@@ -143,14 +141,14 @@ class DeviceActivationStore(context: Context) {
 
 data class DeviceActivation(
     val apiBaseUrl: String,
-    val deviceId: Long,
+    val deviceId: String,
     val token: String,
     val deviceJson: String?,
 )
 
 data class StoredDeviceActivation(
     val apiBaseUrl: String,
-    val deviceId: Long,
+    val deviceId: String,
     val appInstanceId: String,
     val deviceJson: String?,
     val token: String,
