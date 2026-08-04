@@ -39,6 +39,18 @@ class DeviceActivationStore(context: Context) {
         preferences.edit().putBoolean(KEY_ADMIN_BOOTSTRAP_PENDING, false).apply()
     }
 
+    fun clearActivation() {
+        preferences.edit()
+            .remove(KEY_DEVICE_ID)
+            .remove(KEY_API_BASE_URL)
+            .remove(KEY_DEVICE_JSON)
+            .remove(KEY_TOKEN_CIPHERTEXT)
+            .remove(KEY_TOKEN_IV)
+            .remove(KEY_PAIRED_AT_MILLIS)
+            .remove(KEY_ADMIN_BOOTSTRAP_PENDING)
+            .apply()
+    }
+
     fun readActivation(): StoredDeviceActivation? {
         val apiBaseUrl = preferences.getString(KEY_API_BASE_URL, null) ?: return null
         val ciphertext = preferences.getString(KEY_TOKEN_CIPHERTEXT, null) ?: return null

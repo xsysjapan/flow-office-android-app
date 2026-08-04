@@ -38,6 +38,7 @@ data class DeviceAdminUiState(
     val selectedUser: AdminUser? = null,
     val authenticationKeys: List<AuthenticationKeySummary> = emptyList(),
     val busy: Boolean = false,
+    val pairingCleared: Boolean = false,
     @param:StringRes val errorResId: Int? = null,
 ) {
     val canOpen: Boolean

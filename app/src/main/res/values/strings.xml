@@ -43,6 +43,9 @@
     <string name="punch_sending_support">カードを動かさず、そのままお待ちください</string>
     <string name="punch_success_heading">打刻しました</string>
     <string name="punch_success_message">サーバーに送信済みです。</string>
+    <string name="punch_greeting_morning">おはようございます。今日も一日よろしくお願いします。</string>
+    <string name="punch_greeting_daytime">こんにちは。今日もお疲れさまです。</string>
+    <string name="punch_greeting_evening">こんばんは。今日もお疲れさまです。</string>
     <string name="punch_success_employee">%1$s さん</string>
     <string name="punch_success_time">%1$s　%2$s</string>
     <string name="punch_work_time">本日の作業時間　%1$s</string>
@@ -92,6 +95,11 @@
     <string name="admin_registered_heading">NFCカードを登録しました</string>
     <string name="admin_registered_message">%1$s さんの認証キーとして保存されました。</string>
     <string name="admin_register_another">同じ社員の別カードを登録</string>
+    <string name="admin_unpair_action">この端末のペアリングを解除</string>
+    <string name="admin_unpair_confirm_title">ペアリングを解除しますか？</string>
+    <string name="admin_unpair_confirm_message">この端末では打刻できなくなります。再度利用するには、新しいQRコードまたは一時トークンでペアリングしてください。</string>
+    <string name="admin_unpair_confirm_action">ペアリングを解除</string>
+    <string name="admin_unpair_cancel">キャンセル</string>
     <string name="error_admin_nfc_missing">NFCカードを読み取れませんでした。もう一度かざしてください。</string>
     <string name="error_admin_timeout">接続がタイムアウトしました。ネットワークを確認してください。</string>
     <string name="error_admin_connection_failed">APIサーバーに接続できませんでした。ネットワークを確認してください。</string>

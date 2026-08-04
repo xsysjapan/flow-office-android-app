@@ -12,6 +12,7 @@ import jp.co.xsys.flowoffice.data.repository.PunchRepositoryException
 import jp.co.xsys.flowoffice.data.security.DeviceActivationStore
 import jp.co.xsys.flowoffice.domain.error.AppError
 import jp.co.xsys.flowoffice.domain.identity.NfcUidNormalizer
+import jp.co.xsys.flowoffice.domain.identity.NfcOperationLock
 import jp.co.xsys.flowoffice.domain.punch.PunchType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -23,6 +24,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.time.LocalTime
 
 class PunchViewModel(application: Application) : AndroidViewModel(application) {
     private val repository = PunchRepository(
@@ -33,6 +35,7 @@ class PunchViewModel(application: Application) : AndroidViewModel(application) {
     private val _uiState = MutableStateFlow(PunchUiState())
     val uiState: StateFlow<PunchUiState> = _uiState.asStateFlow()
     private var heartbeatJob: Job? = null
+    private val nfcOperationLock = NfcOperationLock()
 
     init {
         refreshDeviceSummary()
@@ -40,6 +43,9 @@ class PunchViewModel(application: Application) : AndroidViewModel(application) {
 
     fun selectType(type: PunchType) {
         if (!_uiState.value.canPunch) return
+        if (_uiState.value.operation is PunchOperationState.Sending ||
+            _uiState.value.operation is PunchOperationState.Success
+        ) return
         _uiState.update {
             it.copy(selectedType = type, operation = PunchOperationState.WaitingForNfc)
         }
@@ -47,11 +53,13 @@ class PunchViewModel(application: Application) : AndroidViewModel(application) {
 
     fun onNfcTagDiscovered(tagId: ByteArray?) {
         if (!_uiState.value.canPunch) return
+        if (!nfcOperationLock.tryLock()) return
         val normalizedUid = tagId?.let(NfcUidNormalizer::normalize).orEmpty()
         if (normalizedUid.isBlank()) {
             _uiState.update {
                 it.copy(operation = PunchOperationState.Error(R.string.error_punch_nfc_missing))
             }
+            nfcOperationLock.unlock()
             return
         }
 
@@ -81,6 +89,18 @@ class PunchViewModel(application: Application) : AndroidViewModel(application) {
                                 workMinutes = response.workMinutes,
                                 missingPunchCount = response.missingPunchCount,
                                 currentDayIncomplete = response.currentDayIncomplete,
+                                fallbackMessageResId = if (
+                                    selectedType == PunchType.CLOCK_IN &&
+                                    response.employeeName.isNullOrBlank() &&
+                                    response.punchedAt.isNullOrBlank() &&
+                                    response.workMinutes == null &&
+                                    response.missingPunchCount == 0 &&
+                                    !response.currentDayIncomplete
+                                ) {
+                                    greetingResId(LocalTime.now().hour)
+                                } else {
+                                    null
+                                },
                             ),
                         ),
                     )
@@ -100,6 +120,7 @@ class PunchViewModel(application: Application) : AndroidViewModel(application) {
                     if (it.operation == success) it.copy(operation = PunchOperationState.WaitingForNfc) else it
                 }
             }
+            nfcOperationLock.unlock()
         }
     }
 
@@ -177,4 +198,10 @@ class PunchViewModel(application: Application) : AndroidViewModel(application) {
         const val RESULT_VISIBLE_MILLIS = 3_000L
         const val HEARTBEAT_INTERVAL_MILLIS = 10 * 60 * 1_000L
     }
+}
+
+internal fun greetingResId(hour: Int): Int = when (hour) {
+    in 5..10 -> R.string.punch_greeting_morning
+    in 11..17 -> R.string.punch_greeting_daytime
+    else -> R.string.punch_greeting_evening
 }

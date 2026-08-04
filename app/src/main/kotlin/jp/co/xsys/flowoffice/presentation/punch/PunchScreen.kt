@@ -97,7 +97,8 @@ fun PunchScreen(
                     NfcHero(operation = state.operation)
                     PunchTypeGrid(
                         selectedType = state.selectedType,
-                        enabled = state.operation !is PunchOperationState.Sending,
+                        enabled = state.operation !is PunchOperationState.Sending &&
+                            state.operation !is PunchOperationState.Success,
                         singleRow = isLandscape,
                         onSelectType = onSelectType,
                     )
@@ -342,6 +343,9 @@ private fun PunchOperationStatus(operation: PunchOperationState) {
         ) {
             result.employeeName?.let {
                 Text(stringResource(R.string.punch_success_employee, it), style = MaterialTheme.typography.titleLarge)
+            }
+            result.fallbackMessageResId?.let {
+                Text(stringResource(it), style = MaterialTheme.typography.titleLarge)
             }
             val time = formatPunchTime(result.punchedAt)
             if (time != null) {

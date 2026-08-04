@@ -71,6 +71,14 @@ class MainActivity : ComponentActivity() {
                         }
                     }
 
+                    LaunchedEffect(adminState.pairingCleared) {
+                        if (adminState.pairingCleared) {
+                            punchViewModel.refreshDeviceSummary()
+                            pairingViewModel.resetAfterUnpairing()
+                            showPunch = false
+                        }
+                    }
+
                     DisposableEffect(showPunch, adminState.visible) {
                         val nfcAdapter = NfcAdapter.getDefaultAdapter(this@MainActivity)
                         if (showPunch) {
@@ -112,6 +120,7 @@ class MainActivity : ComponentActivity() {
                             onSelectUser = adminViewModel::selectUser,
                             onBeginCardRegistration = adminViewModel::beginCardRegistration,
                             onBackToUsers = adminViewModel::backToUsers,
+                            onClearPairing = adminViewModel::clearPairing,
                         )
                     } else if (showPunch) {
                         PunchScreen(

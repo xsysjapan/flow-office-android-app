@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -24,6 +25,10 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -45,9 +50,33 @@ fun DeviceAdminScreen(
     onSelectUser: (AdminUser) -> Unit,
     onBeginCardRegistration: () -> Unit,
     onBackToUsers: () -> Unit,
+    onClearPairing: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    var showClearPairingConfirmation by remember { mutableStateOf(false) }
     BackHandler(onBack = onClose)
+    if (showClearPairingConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showClearPairingConfirmation = false },
+            title = { Text(stringResource(R.string.admin_unpair_confirm_title)) },
+            text = { Text(stringResource(R.string.admin_unpair_confirm_message)) },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showClearPairingConfirmation = false
+                        onClearPairing()
+                    },
+                ) {
+                    Text(stringResource(R.string.admin_unpair_confirm_action))
+                }
+            },
+            dismissButton = {
+                OutlinedButton(onClick = { showClearPairingConfirmation = false }) {
+                    Text(stringResource(R.string.admin_unpair_cancel))
+                }
+            },
+        )
+    }
     Scaffold(
         modifier = modifier.fillMaxSize(),
         contentWindowInsets = WindowInsets.safeDrawing,
@@ -106,6 +135,7 @@ fun DeviceAdminScreen(
                         onQueryChange = onSearchQueryChange,
                         onSearch = onSearch,
                         onSelect = onSelectUser,
+                        onClearPairing = { showClearPairingConfirmation = true },
                     )
                     DeviceAdminPhase.USER_DETAIL -> UserDetailContent(
                         state = state,
@@ -158,6 +188,7 @@ private fun UsersContent(
     onQueryChange: (String) -> Unit,
     onSearch: () -> Unit,
     onSelect: (AdminUser) -> Unit,
+    onClearPairing: () -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(stringResource(R.string.admin_select_employee), style = MaterialTheme.typography.titleLarge)
@@ -175,6 +206,14 @@ private fun UsersContent(
         }
         if (state.busy) CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
         UserList(null, state.users, onSelect)
+        HorizontalDivider()
+        OutlinedButton(
+            onClick = onClearPairing,
+            enabled = !state.busy,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(stringResource(R.string.admin_unpair_action))
+        }
     }
 }
 

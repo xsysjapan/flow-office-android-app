@@ -155,6 +155,18 @@ class DeviceAdminViewModel(application: Application) : AndroidViewModel(applicat
         }
     }
 
+    fun clearPairing() {
+        if (_uiState.value.sessionAdminName.isBlank() || _uiState.value.busy) return
+        requestJob?.cancel()
+        _uiState.update { it.copy(busy = true, errorResId = null) }
+        viewModelScope.launch {
+            runCatching { withContext(Dispatchers.IO) { repository.endSession() } }
+            activationStore.clearActivation()
+            _uiState.value = DeviceAdminUiState(pairingCleared = true)
+        }
+    }
+
+    @Synchronized
     fun onNfcTagDiscovered(tagId: ByteArray?) {
         if (_uiState.value.busy) return
         val uid = tagId?.let(NfcUidNormalizer::normalize).orEmpty()

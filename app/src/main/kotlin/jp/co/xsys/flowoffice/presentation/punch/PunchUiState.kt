@@ -44,4 +44,5 @@ data class PunchResult(
     val workMinutes: Int? = null,
     val missingPunchCount: Int = 0,
     val currentDayIncomplete: Boolean = false,
+    @param:StringRes val fallbackMessageResId: Int? = null,
 )

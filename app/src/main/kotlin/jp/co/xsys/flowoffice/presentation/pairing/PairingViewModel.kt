@@ -68,6 +68,10 @@ class PairingViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    fun resetAfterUnpairing() {
+        _uiState.value = PairingUiState()
+    }
+
     fun activate() {
         val state = _uiState.value
         val payload = PairingClaimPayloadParser.fromClaimUrl(
@@ -96,6 +100,7 @@ class PairingViewModel(application: Application) : AndroidViewModel(application)
             _uiState.update {
                 if (result.isSuccess) {
                     it.copy(
+                        claimUrl = "",
                         claimToken = "",
                         submission = PairingSubmissionState.Success,
                     )
